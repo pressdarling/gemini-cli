@@ -209,6 +209,7 @@ export interface ConfigParameters {
   extensionManagement?: boolean;
   enablePromptCompletion?: boolean;
   useSmartEdit?: boolean;
+  enablePromptCompletion?: boolean;
 }
 
 export class Config {
@@ -788,6 +789,10 @@ export class Config {
 
   getSkipNextSpeakerCheck(): boolean {
     return this.skipNextSpeakerCheck;
+  }
+
+  getUseSmartEdit(): boolean {
+    return this.useSmartEdit;
   }
 
   getScreenReader(): boolean {

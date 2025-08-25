@@ -14,7 +14,11 @@ import {
   GoogleGenAI,
 } from '@google/genai';
 import { findIndexAfterFraction, GeminiClient } from './client.js';
-import { AuthType, ContentGenerator } from './contentGenerator.js';
+import {
+  AuthType,
+  ContentGenerator,
+  ContentGeneratorConfig,
+} from './contentGenerator.js';
 import { GeminiChat } from './geminiChat.js';
 import { Config } from '../config/config.js';
 import { GeminiEventType, Turn } from './turn.js';
@@ -173,7 +177,7 @@ describe('Gemini Client (client.ts)', () => {
       getTool: vi.fn().mockReturnValue(null),
     };
     const fileService = new FileDiscoveryService('/test/dir');
-    const contentGeneratorConfig = {
+    const contentGeneratorConfig: ContentGeneratorConfig = {
       model: 'test-model',
       apiKey: 'test-key',
       vertexai: false,
@@ -481,6 +485,38 @@ describe('Gemini Client (client.ts)', () => {
         setHistory: vi.fn(),
         sendMessage: mockSendMessage,
       } as unknown as GeminiChat;
+    });
+
+    it('does not yield the result if the compression inflated the tokens', async () => {
+      const mockCountTokens = vi
+        .fn()
+        .mockResolvedValueOnce({ totalTokens: 1000 })
+        .mockResolvedValueOnce({ totalTokens: 5000 });
+
+      const mockSendMessage = vi.fn().mockResolvedValue({ text: 'Summary' });
+
+      const mockChatHistory = [
+        { role: 'user', parts: [{ text: 'Long conversation' }] },
+        { role: 'model', parts: [{ text: 'Long response' }] },
+      ];
+
+      const mockChat: Partial<GeminiChat> = {
+        getHistory: vi.fn().mockReturnValue(mockChatHistory),
+        setHistory: vi.fn(),
+        sendMessage: mockSendMessage,
+      };
+
+      const mockGenerator: Partial<ContentGenerator> = {
+        countTokens: mockCountTokens,
+      };
+
+      client['chat'] = mockChat as GeminiChat;
+      client['contentGenerator'] = mockGenerator as ContentGenerator;
+      client['startChat'] = vi.fn().mockResolvedValue(mockChat);
+
+      const result = await client.tryCompressChat('prompt-id-4', true);
+
+      expect(result).toEqual(null);
     });
 
     it('should not trigger summarization if token count is below threshold', async () => {

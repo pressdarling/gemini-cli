@@ -858,6 +858,11 @@ export class GeminiClient {
       }),
     );
 
+    if (newTokenCount > originalTokenCount) {
+      console.warn('Compression incorrectly inflated the token count.');
+      return null;
+    }
+
     return {
       originalTokenCount,
       newTokenCount,

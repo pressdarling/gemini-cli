@@ -206,6 +206,7 @@ export interface ConfigParameters {
   useRipgrep?: boolean;
   shouldUseNodePtyShell?: boolean;
   skipNextSpeakerCheck?: boolean;
+  extensionManagement?: boolean;
   enablePromptCompletion?: boolean;
   eventEmitter?: EventEmitter;
 }
@@ -255,7 +256,7 @@ export class Config {
   private readonly folderTrustFeature: boolean;
   private readonly folderTrust: boolean;
   private ideMode: boolean;
-  private ideClient: IdeClient;
+  private ideClient!: IdeClient;
   private inFallbackMode = false;
   private readonly maxSessionTurns: number;
   private readonly listExtensions: boolean;
@@ -277,6 +278,7 @@ export class Config {
   private readonly useRipgrep: boolean;
   private readonly shouldUseNodePtyShell: boolean;
   private readonly skipNextSpeakerCheck: boolean;
+  private readonly extensionManagement: boolean;
   private readonly enablePromptCompletion: boolean = false;
   private initialized: boolean = false;
   readonly storage: Storage;
@@ -343,7 +345,6 @@ export class Config {
     this.folderTrustFeature = params.folderTrustFeature ?? false;
     this.folderTrust = params.folderTrust ?? false;
     this.ideMode = params.ideMode ?? false;
-    this.ideClient = IdeClient.getInstance();
     this.loadMemoryFromIncludeDirectories =
       params.loadMemoryFromIncludeDirectories ?? false;
     this.chatCompression = params.chatCompression;
@@ -352,6 +353,7 @@ export class Config {
     this.useRipgrep = params.useRipgrep ?? false;
     this.shouldUseNodePtyShell = params.shouldUseNodePtyShell ?? false;
     this.skipNextSpeakerCheck = params.skipNextSpeakerCheck ?? false;
+    this.extensionManagement = params.extensionManagement ?? false;
     this.storage = new Storage(this.targetDir);
     this.enablePromptCompletion = params.enablePromptCompletion ?? false;
     this.fileExclusions = new FileExclusions(this);
@@ -374,6 +376,7 @@ export class Config {
       throw Error('Config was already initialized');
     }
     this.initialized = true;
+    this.ideClient = await IdeClient.getInstance();
     // Initialize centralized FileDiscoveryService
     this.getFileService();
     if (this.getCheckpointingEnabled()) {
@@ -680,6 +683,10 @@ export class Config {
 
   getListExtensions(): boolean {
     return this.listExtensions;
+  }
+
+  getExtensionManagement(): boolean {
+    return this.extensionManagement;
   }
 
   getExtensions(): GeminiCLIExtension[] {

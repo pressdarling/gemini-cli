@@ -23,7 +23,8 @@ import {
   OAuthTokenResponse,
   OAuthClientRegistrationResponse,
 } from './oauth-provider.js';
-import { MCPOAuthTokenStorage, MCPOAuthToken } from './oauth-token-storage.js';
+import { MCPOAuthTokenStorage } from './oauth-token-storage.js';
+import { MCPOAuthToken } from './types.js';
 
 // Mock fetch globally
 const mockFetch = vi.fn();

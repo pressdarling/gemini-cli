@@ -8,34 +8,12 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { Storage } from '../config/storage.js';
 import { getErrorMessage } from '../utils/errors.js';
-
-/**
- * Interface for MCP OAuth tokens.
- */
-export interface MCPOAuthToken {
-  accessToken: string;
-  refreshToken?: string;
-  expiresAt?: number;
-  tokenType: string;
-  scope?: string;
-}
-
-/**
- * Interface for stored MCP OAuth credentials.
- */
-export interface MCPOAuthCredentials {
-  serverName: string;
-  token: MCPOAuthToken;
-  clientId?: string;
-  tokenUrl?: string;
-  mcpServerUrl?: string;
-  updatedAt: number;
-}
+import { MCPOAuthToken, MCPOAuthCredentials } from './types.js';
 
 /**
  * Class for managing MCP OAuth token storage and retrieval.
  */
-export class MCPOAuthTokenStorage {
+export class MCPOAuthTokenStorage implements ITokenStorage {
   /**
    * Get the path to the token storage file.
    *

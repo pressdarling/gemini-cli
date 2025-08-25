@@ -13,7 +13,7 @@ import { MCPOAuthToken, MCPOAuthCredentials } from './types.js';
 /**
  * Class for managing MCP OAuth token storage and retrieval.
  */
-export class MCPOAuthTokenStorage implements ITokenStorage {
+export class MCPOAuthTokenStorage {
   /**
    * Get the path to the token storage file.
    *

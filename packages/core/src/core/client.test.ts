@@ -19,7 +19,7 @@ import {
   type ContentGenerator,
   type ContentGeneratorConfig,
 } from './contentGenerator.js';
-import { GeminiChat } from './geminiChat.js';
+import { type GeminiChat } from './geminiChat.js';
 import { Config } from '../config/config.js';
 import { GeminiEventType, Turn } from './turn.js';
 import { getCoreSystemPrompt } from './prompts.js';

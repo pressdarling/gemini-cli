@@ -21,7 +21,7 @@ import {
 } from './contentGenerator.js';
 import { type GeminiChat } from './geminiChat.js';
 import { Config } from '../config/config.js';
-import { GeminiEventType, Turn } from './turn.js';
+import { CompressionStatus, GeminiEventType, Turn } from './turn.js';
 import { getCoreSystemPrompt } from './prompts.js';
 import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
 import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
@@ -37,7 +37,8 @@ const mockEmbedContentFn = vi.fn();
 const mockTurnRunFn = vi.fn();
 
 vi.mock('@google/genai');
-vi.mock('./turn', () => {
+vi.mock('./turn', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./turn.js')>();
   // Define a mock class that has the same shape as the real Turn
   class MockTurn {
     pendingToolCalls = [];
@@ -50,13 +51,8 @@ vi.mock('./turn', () => {
   }
   // Export the mock class as 'Turn'
   return {
+    ...actual,
     Turn: MockTurn,
-    GeminiEventType: {
-      MaxSessionTurns: 'MaxSessionTurns',
-      ChatCompressed: 'ChatCompressed',
-      Error: 'error',
-      Content: 'content',
-    },
   };
 });
 
@@ -522,6 +518,8 @@ describe('Gemini Client (client.ts)', () => {
         const result = await client.tryCompressChat('prompt-id-4', true);
 
         expect(result).toEqual({
+          compressionStatus:
+            CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT,
           newTokenCount: 5000,
           originalTokenCount: 1000,
         });
@@ -542,7 +540,11 @@ describe('Gemini Client (client.ts)', () => {
 
         // it counts tokens for {original, compressed} and then never again
         expect(mockGenerator.countTokens).toHaveBeenCalledTimes(2);
-        expect(result).toBe(null);
+        expect(result).toEqual({
+          compressionStatus: CompressionStatus.NOOP,
+          newTokenCount: 0,
+          originalTokenCount: 0,
+        });
       });
     });
 
@@ -590,7 +592,11 @@ describe('Gemini Client (client.ts)', () => {
       const newChat = client.getChat();
 
       expect(tokenLimit).toHaveBeenCalled();
-      expect(result).toBeNull();
+      expect(result).toEqual({
+        compressionStatus: CompressionStatus.NOOP,
+        newTokenCount: 699,
+        originalTokenCount: 699,
+      });
       expect(newChat).toBe(initialChat);
     });
 
@@ -667,6 +673,7 @@ describe('Gemini Client (client.ts)', () => {
 
       // Assert that summarization happened and returned the correct stats
       expect(result).toEqual({
+        compressionStatus: CompressionStatus.COMPRESSED,
         originalTokenCount,
         newTokenCount,
       });
@@ -719,6 +726,7 @@ describe('Gemini Client (client.ts)', () => {
 
       // Assert that summarization happened and returned the correct stats
       expect(result).toEqual({
+        compressionStatus: CompressionStatus.COMPRESSED,
         originalTokenCount,
         newTokenCount,
       });
@@ -758,6 +766,7 @@ describe('Gemini Client (client.ts)', () => {
       expect(mockSendMessage).toHaveBeenCalled();
 
       expect(result).toEqual({
+        compressionStatus: CompressionStatus.COMPRESSED,
         originalTokenCount,
         newTokenCount,
       });
@@ -815,6 +824,7 @@ describe('Gemini Client (client.ts)', () => {
       });
 
       expect(result).toEqual({
+        compressionStatus: CompressionStatus.COMPRESSED,
         originalTokenCount: 100000,
         newTokenCount: 5000,
       });
@@ -1380,7 +1390,11 @@ ${JSON.stringify(
 
       beforeEach(() => {
         client['forceFullIdeContext'] = false; // Reset before each delta test
-        vi.spyOn(client, 'tryCompressChat').mockResolvedValue(null);
+        vi.spyOn(client, 'tryCompressChat').mockResolvedValue({
+          originalTokenCount: 0,
+          newTokenCount: 0,
+          compressionStatus: CompressionStatus.COMPRESSED,
+        });
         vi.spyOn(client['config'], 'getIdeMode').mockReturnValue(true);
         mockTurnRunFn.mockReturnValue(mockStream);
 
@@ -1639,7 +1653,11 @@ ${JSON.stringify(
       let mockChat: Partial<GeminiChat>;
 
       beforeEach(() => {
-        vi.spyOn(client, 'tryCompressChat').mockResolvedValue(null);
+        vi.spyOn(client, 'tryCompressChat').mockResolvedValue({
+          originalTokenCount: 0,
+          newTokenCount: 0,
+          compressionStatus: CompressionStatus.COMPRESSED,
+        });
 
         const mockStream = (async function* () {
           yield { type: 'content', value: 'response' };

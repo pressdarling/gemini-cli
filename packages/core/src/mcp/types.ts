@@ -21,7 +21,7 @@ export interface MCPOAuthCredentials {
   updatedAt: number;
 }
 
-export interface ITokenStorage {
+export interface TokenStorage {
   getCredentials(serverName: string): Promise<MCPOAuthCredentials | null>;
   setCredentials(credentials: MCPOAuthCredentials): Promise<void>;
   deleteCredentials(serverName: string): Promise<void>;

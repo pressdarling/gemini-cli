@@ -26,7 +26,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const version = context.extension.packageJSON.version;
   const latestVersion = vscode.extensions.getExtension(CLI_IDE_COMPANION_IDENTIFIER)?.packageJSON.version;
   if(version !== latestVersion) {
-    log("A new version of the Gemini CLI extension has been released")
+    log("A new version of the Gemini CLI extension has been released");
   }
 
   const diffContentProvider = new DiffContentProvider();

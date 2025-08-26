@@ -24,6 +24,10 @@ import { keyMatchers, Command } from '../keyMatchers.js';
 import type { CommandContext, SlashCommand } from '../commands/types.js';
 import type { Config } from '@google/gemini-cli-core';
 import {
+  parseInputForHighlighting,
+  type HighlightToken,
+} from '../utils/highlight.js';
+import {
   clipboardHasImage,
   saveClipboardImage,
   cleanupOldClipboardImages,
@@ -717,69 +721,92 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
           ) : (
             linesToRender
               .map((lineText, visualIdxInRenderedSet) => {
+                const tokens = parseInputForHighlighting(lineText);
                 const cursorVisualRow =
                   cursorVisualRowAbsolute - scrollVisualRow;
-                let display = cpSlice(lineText, 0, inputWidth);
-
                 const isOnCursorLine =
                   focus && visualIdxInRenderedSet === cursorVisualRow;
+
+                let charCount = 0;
+
+                const renderTokens = (
+                  tokens: readonly HighlightToken[],
+                  isCursorLine: boolean,
+                ) =>
+                  tokens.map((token, tokenIdx) => {
+                    let display = token.text;
+                    if (isCursorLine) {
+                      const relativeVisualColForHighlight =
+                        cursorVisualColAbsolute;
+                      const tokenStart = charCount;
+                      const tokenEnd = tokenStart + cpLen(token.text);
+
+                      if (
+                        relativeVisualColForHighlight >= tokenStart &&
+                        relativeVisualColForHighlight < tokenEnd
+                      ) {
+                        const charToHighlight = cpSlice(
+                          token.text,
+                          relativeVisualColForHighlight - tokenStart,
+                          relativeVisualColForHighlight - tokenStart + 1,
+                        );
+                        const highlighted = chalk.inverse(charToHighlight);
+                        display =
+                          cpSlice(
+                            token.text,
+                            0,
+                            relativeVisualColForHighlight - tokenStart,
+                          ) +
+                          highlighted +
+                          cpSlice(
+                            token.text,
+                            relativeVisualColForHighlight - tokenStart + 1,
+                          );
+                      }
+                      charCount = tokenEnd;
+                    }
+
+                    const color =
+                      token.type === 'command' || token.type === 'file'
+                        ? theme.text.accent
+                        : undefined;
+
+                    return (
+                      <Text key={`token-${tokenIdx}`} color={color}>
+                        {display}
+                      </Text>
+                    );
+                  });
+
+                const renderedLine = renderTokens(tokens, isOnCursorLine);
                 const currentLineGhost = isOnCursorLine ? inlineGhost : '';
 
-                const ghostWidth = stringWidth(currentLineGhost);
-
-                if (focus && visualIdxInRenderedSet === cursorVisualRow) {
-                  const relativeVisualColForHighlight = cursorVisualColAbsolute;
-
-                  if (relativeVisualColForHighlight >= 0) {
-                    if (relativeVisualColForHighlight < cpLen(display)) {
-                      const charToHighlight =
-                        cpSlice(
-                          display,
-                          relativeVisualColForHighlight,
-                          relativeVisualColForHighlight + 1,
-                        ) || ' ';
-                      const highlighted = chalk.inverse(charToHighlight);
-                      display =
-                        cpSlice(display, 0, relativeVisualColForHighlight) +
-                        highlighted +
-                        cpSlice(display, relativeVisualColForHighlight + 1);
-                    } else if (
-                      relativeVisualColForHighlight === cpLen(display)
-                    ) {
-                      if (!currentLineGhost) {
-                        display = display + chalk.inverse(' ');
-                      }
-                    }
+                if (
+                  isOnCursorLine &&
+                  cursorVisualColAbsolute === cpLen(lineText)
+                ) {
+                  if (!currentLineGhost) {
+                    renderedLine.push(
+                      <Text key="cursor-end">{chalk.inverse(' ')}</Text>,
+                    );
                   }
                 }
 
                 const showCursorBeforeGhost =
                   focus &&
-                  visualIdxInRenderedSet === cursorVisualRow &&
-                  cursorVisualColAbsolute ===
-                    // eslint-disable-next-line no-control-regex
-                    cpLen(display.replace(/\x1b\[[0-9;]*m/g, '')) &&
+                  isOnCursorLine &&
+                  cursorVisualColAbsolute === cpLen(lineText) &&
                   currentLineGhost;
-
-                const actualDisplayWidth = stringWidth(display);
-                const cursorWidth = showCursorBeforeGhost ? 1 : 0;
-                const totalContentWidth =
-                  actualDisplayWidth + cursorWidth + ghostWidth;
-                const trailingPadding = Math.max(
-                  0,
-                  inputWidth - totalContentWidth,
-                );
 
                 return (
                   <Text key={`line-${visualIdxInRenderedSet}`}>
-                    {display}
+                    {renderedLine}
                     {showCursorBeforeGhost && chalk.inverse(' ')}
                     {currentLineGhost && (
                       <Text color={theme.text.secondary}>
                         {currentLineGhost}
                       </Text>
                     )}
-                    {trailingPadding > 0 && ' '.repeat(trailingPadding)}
                   </Text>
                 );
               })

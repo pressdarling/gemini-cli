@@ -9,6 +9,7 @@ import { IDEServer } from './ide-server.js';
 import { DiffContentProvider, DiffManager } from './diff-manager.js';
 import { createLogger } from './utils/logger.js';
 
+const CLI_IDE_COMPANION_IDENTIFIER = 'gemini-cli-vscode-ide-companion';
 const INFO_MESSAGE_SHOWN_KEY = 'geminiCliInfoMessageShown';
 export const DIFF_SCHEME = 'gemini-diff';
 
@@ -21,6 +22,12 @@ export async function activate(context: vscode.ExtensionContext) {
   logger = vscode.window.createOutputChannel('Gemini CLI IDE Companion');
   log = createLogger(context, logger);
   log('Extension activated');
+
+  const version = context.extension.packageJSON.version;
+  const latestVersion = vscode.extensions.getExtension(CLI_IDE_COMPANION_IDENTIFIER)?.packageJSON.version;
+  if(version !== latestVersion) {
+    log("A new version of the Gemini CLI extension has been released")
+  }
 
   const diffContentProvider = new DiffContentProvider();
   const diffManager = new DiffManager(log, diffContentProvider);

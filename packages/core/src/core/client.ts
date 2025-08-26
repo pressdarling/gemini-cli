@@ -17,6 +17,7 @@ import {
   getEnvironmentContext,
 } from '../utils/environmentContext.js';
 import type { ServerGeminiStreamEvent, ChatCompressionInfo } from './turn.js';
+import { CompressionStatus } from './turn.js';
 import { Turn, GeminiEventType } from './turn.js';
 import type { Config } from '../config/config.js';
 import type { UserTierId } from '../code_assist/types.js';
@@ -776,7 +777,11 @@ export class GeminiClient {
 
     // Regardless of `force`, don't do anything if the history is empty.
     if (curatedHistory.length === 0 || this.hasFailedCompressionAttempt) {
-      return null;
+      return {
+        originalTokenCount: 0,
+        newTokenCount: 0,
+        compressionStatus: CompressionStatus.NOOP,
+      };
     }
 
     const model = this.config.getModel();
@@ -789,7 +794,12 @@ export class GeminiClient {
     if (originalTokenCount === undefined) {
       console.warn(`Could not determine token count for model ${model}.`);
       this.hasFailedCompressionAttempt = !force && true;
-      return null;
+      return {
+        originalTokenCount: 0,
+        newTokenCount: 0,
+        compressionStatus:
+          CompressionStatus.COMPRESSION_FAILED_TOKEN_COUNT_ERROR,
+      };
     }
 
     const contextPercentageThreshold =
@@ -800,7 +810,11 @@ export class GeminiClient {
       const threshold =
         contextPercentageThreshold ?? COMPRESSION_TOKEN_THRESHOLD;
       if (originalTokenCount < threshold * tokenLimit(model)) {
-        return null;
+        return {
+          originalTokenCount,
+          newTokenCount: originalTokenCount,
+          compressionStatus: CompressionStatus.NOOP,
+        };
       }
     }
 
@@ -856,7 +870,12 @@ export class GeminiClient {
     if (newTokenCount === undefined) {
       console.warn('Could not determine compressed history token count.');
       this.hasFailedCompressionAttempt = !force && true;
-      return null;
+      return {
+        originalTokenCount,
+        newTokenCount: originalTokenCount,
+        compressionStatus:
+          CompressionStatus.COMPRESSION_FAILED_TOKEN_COUNT_ERROR,
+      };
     }
 
     logChatCompression(
@@ -869,15 +888,20 @@ export class GeminiClient {
 
     if (newTokenCount > originalTokenCount) {
       this.hasFailedCompressionAttempt = !force && true;
-      console.warn('Compression incorrectly inflated the token count.');
-      return null;
+      return {
+        originalTokenCount,
+        newTokenCount,
+        compressionStatus:
+          CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT,
+      };
+    } else {
+      this.chat = chat; // Chat compression successful, set new state.
     }
-
-    this.chat = chat;
 
     return {
       originalTokenCount,
       newTokenCount,
+      compressionStatus: CompressionStatus.COMPRESSED,
     };
   }
 

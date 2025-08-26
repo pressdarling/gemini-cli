@@ -517,11 +517,14 @@ describe('Gemini Client (client.ts)', () => {
         return { client, mockChat, mockGenerator };
       }
 
-      it('does not yield the result if the compression inflated the tokens', async () => {
+      it('yields the result even if the compression inflated the tokens', async () => {
         const { client } = setup();
         const result = await client.tryCompressChat('prompt-id-4', true);
 
-        expect(result).toEqual(null);
+        expect(result).toEqual({
+          newTokenCount: 5000,
+          originalTokenCount: 1000,
+        });
       });
 
       it('does not manipulate the source chat', async () => {

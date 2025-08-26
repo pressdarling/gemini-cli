@@ -514,7 +514,7 @@ describe('Gemini Client (client.ts)', () => {
         client['contentGenerator'] = mockGenerator as ContentGenerator;
         client['startChat'] = vi.fn().mockResolvedValue({ ...mockChat });
 
-        return { client, mockChat };
+        return { client, mockChat, mockGenerator };
       }
 
       it('does not yield the result if the compression inflated the tokens', async () => {
@@ -529,6 +529,17 @@ describe('Gemini Client (client.ts)', () => {
         await client.tryCompressChat('prompt-id-4', true);
 
         expect(client['chat']).toBe(mockChat); // a new chat session was not created
+      });
+
+      it('will not attempt to compress context after a failure', async () => {
+        const { client, mockGenerator } = setup();
+        await client.tryCompressChat('prompt-id-4');
+
+        const result = await client.tryCompressChat('prompt-id-5');
+
+        // it counts tokens for {original, compressed} and then never again
+        expect(mockGenerator.countTokens).toHaveBeenCalledTimes(2);
+        expect(result).toBe(null);
       });
     });
 

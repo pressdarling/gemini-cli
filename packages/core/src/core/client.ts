@@ -117,6 +117,12 @@ export class GeminiClient {
   private lastSentIdeContext: IdeContext | undefined;
   private forceFullIdeContext = true;
 
+  /**
+   * At any point in this conversation, was compression triggered without
+   * being forced and did it fail?
+   */
+  private hasFailedCompressionAttempt = false;
+
   constructor(private config: Config) {
     if (config.getProxy()) {
       setGlobalDispatcher(new ProxyAgent(config.getProxy() as string));
@@ -219,6 +225,7 @@ export class GeminiClient {
 
   async startChat(extraHistory?: Content[]): Promise<GeminiChat> {
     this.forceFullIdeContext = true;
+    this.hasFailedCompressionAttempt = false;
     const envParts = await getEnvironmentContext(this.config);
     const toolRegistry = this.config.getToolRegistry();
     const toolDeclarations = toolRegistry.getFunctionDeclarations();
@@ -768,7 +775,7 @@ export class GeminiClient {
     const curatedHistory = this.getChat().getHistory(true);
 
     // Regardless of `force`, don't do anything if the history is empty.
-    if (curatedHistory.length === 0) {
+    if (curatedHistory.length === 0 || this.hasFailedCompressionAttempt) {
       return null;
     }
 
@@ -781,6 +788,7 @@ export class GeminiClient {
       });
     if (originalTokenCount === undefined) {
       console.warn(`Could not determine token count for model ${model}.`);
+      this.hasFailedCompressionAttempt = !force && true;
       return null;
     }
 
@@ -847,6 +855,7 @@ export class GeminiClient {
       });
     if (newTokenCount === undefined) {
       console.warn('Could not determine compressed history token count.');
+      this.hasFailedCompressionAttempt = !force && true;
       return null;
     }
 
@@ -859,6 +868,7 @@ export class GeminiClient {
     );
 
     if (newTokenCount > originalTokenCount) {
+      this.hasFailedCompressionAttempt = !force && true;
       console.warn('Compression incorrectly inflated the token count.');
       return null;
     }

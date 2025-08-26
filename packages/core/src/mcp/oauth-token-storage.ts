@@ -8,7 +8,10 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { Storage } from '../config/storage.js';
 import { getErrorMessage } from '../utils/errors.js';
-import type { MCPOAuthToken, MCPOAuthCredentials } from './types.js';
+import type {
+  MCPOAuthToken,
+  MCPOAuthCredentials,
+} from './token-storage/types.js';
 
 /**
  * Class for managing MCP OAuth token storage and retrieval.

@@ -23,7 +23,7 @@ import type {
   OAuthClientRegistrationResponse,
 } from './oauth-provider.js';
 import { MCPOAuthProvider } from './oauth-provider.js';
-import type { MCPOAuthToken } from './types.js';
+import type { MCPOAuthToken } from './token-storage/types.js';
 import { MCPOAuthTokenStorage } from './oauth-token-storage.js';
 
 // Mock fetch globally

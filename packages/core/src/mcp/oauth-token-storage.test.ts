@@ -8,7 +8,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { MCPOAuthTokenStorage } from './oauth-token-storage.js';
-import type { MCPOAuthToken, MCPOAuthCredentials } from './types.js';
+import type {
+  MCPOAuthToken,
+  MCPOAuthCredentials,
+} from './token-storage/types.js';
 
 // Mock file system operations
 vi.mock('node:fs', () => ({

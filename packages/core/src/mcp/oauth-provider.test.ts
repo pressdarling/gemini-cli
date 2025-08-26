@@ -17,14 +17,14 @@ vi.mock('./oauth-token-storage.js');
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as http from 'node:http';
 import * as crypto from 'node:crypto';
-import {
-  MCPOAuthProvider,
+import type {
   MCPOAuthConfig,
   OAuthTokenResponse,
   OAuthClientRegistrationResponse,
 } from './oauth-provider.js';
+import { MCPOAuthProvider } from './oauth-provider.js';
+import type { MCPOAuthToken } from './types.js';
 import { MCPOAuthTokenStorage } from './oauth-token-storage.js';
-import { MCPOAuthToken } from './types.js';
 
 // Mock fetch globally
 const mockFetch = vi.fn();

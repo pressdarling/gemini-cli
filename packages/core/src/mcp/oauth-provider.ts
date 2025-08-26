@@ -8,8 +8,8 @@ import * as http from 'node:http';
 import * as crypto from 'node:crypto';
 import { URL } from 'node:url';
 import { openBrowserSecurely } from '../utils/secure-browser-launcher.js';
+import type { MCPOAuthToken } from './types.js';
 import { MCPOAuthTokenStorage } from './oauth-token-storage.js';
-import { MCPOAuthToken } from './types.js';
 import { getErrorMessage } from '../utils/errors.js';
 import { OAuthUtils } from './oauth-utils.js';
 

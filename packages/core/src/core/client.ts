@@ -822,11 +822,12 @@ export class GeminiClient {
         },
         config: {
           systemInstruction: { text: getCompressionPrompt() },
+          maxOutputTokens: originalTokenCount,
         },
       },
       prompt_id,
     );
-    this.chat = await this.startChat([
+    const chat = await this.startChat([
       {
         role: 'user',
         parts: [{ text: summary }],
@@ -862,6 +863,8 @@ export class GeminiClient {
       console.warn('Compression incorrectly inflated the token count.');
       return null;
     }
+
+    this.chat = chat;
 
     return {
       originalTokenCount,

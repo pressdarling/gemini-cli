@@ -487,36 +487,75 @@ describe('Gemini Client (client.ts)', () => {
       } as unknown as GeminiChat;
     });
 
-    it('does not yield the result if the compression inflated the tokens', async () => {
-      const mockCountTokens = vi
-        .fn()
-        .mockResolvedValueOnce({ totalTokens: 1000 })
-        .mockResolvedValueOnce({ totalTokens: 5000 });
+    describe('when compression inflates the token count', () => {
+      function setup() {
+        const mockChatHistory: Content[] = [
+          { role: 'user', parts: [{ text: 'Long conversation' }] },
+          { role: 'model', parts: [{ text: 'Long response' }] },
+        ];
 
-      const mockSendMessage = vi.fn().mockResolvedValue({ text: 'Summary' });
+        const mockChat: Partial<GeminiChat> = {
+          getHistory: vi.fn().mockReturnValue(mockChatHistory),
+          setHistory: vi.fn(),
+          sendMessage: vi.fn().mockResolvedValue({ text: 'Summary' }),
+        };
+        const mockCountTokens = vi
+          .fn()
+          .mockResolvedValueOnce({ totalTokens: 1000 })
+          .mockResolvedValueOnce({ totalTokens: 5000 });
 
-      const mockChatHistory = [
-        { role: 'user', parts: [{ text: 'Long conversation' }] },
-        { role: 'model', parts: [{ text: 'Long response' }] },
-      ];
+        const mockGenerator: Partial<ContentGenerator> = {
+          countTokens: mockCountTokens,
+        };
 
-      const mockChat: Partial<GeminiChat> = {
-        getHistory: vi.fn().mockReturnValue(mockChatHistory),
-        setHistory: vi.fn(),
-        sendMessage: mockSendMessage,
-      };
+        client['chat'] = mockChat as GeminiChat;
+        client['contentGenerator'] = mockGenerator as ContentGenerator;
+        client['startChat'] = vi.fn().mockResolvedValue({ ...mockChat });
 
-      const mockGenerator: Partial<ContentGenerator> = {
-        countTokens: mockCountTokens,
-      };
+        return { client, mockChat };
+      }
 
-      client['chat'] = mockChat as GeminiChat;
-      client['contentGenerator'] = mockGenerator as ContentGenerator;
-      client['startChat'] = vi.fn().mockResolvedValue(mockChat);
+      it('does not yield the result if the compression inflated the tokens', async () => {
+        const { client } = setup();
+        const result = await client.tryCompressChat('prompt-id-4', true);
 
-      const result = await client.tryCompressChat('prompt-id-4', true);
+        expect(result).toEqual(null);
+      });
 
-      expect(result).toEqual(null);
+      it('does not manipulate the source chat', async () => {
+        const { client, mockChat } = setup();
+        await client.tryCompressChat('prompt-id-4', true);
+
+        expect(client['chat']).toBe(mockChat); // a new chat session was not created
+      });
+    });
+
+    it('attempts to compress with a maxOutputTokens set to the original token count', async () => {
+      vi.mocked(tokenLimit).mockReturnValue(1000);
+      mockCountTokens.mockResolvedValue({
+        totalTokens: 999,
+      });
+
+      mockGetHistory.mockReturnValue([
+        { role: 'user', parts: [{ text: '...history...' }] },
+      ]);
+
+      // Mock the summary response from the chat
+      mockSendMessage.mockResolvedValue({
+        role: 'model',
+        parts: [{ text: 'This is a summary.' }],
+      });
+
+      await client.tryCompressChat('prompt-id-2', true);
+
+      expect(mockSendMessage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          config: expect.objectContaining({
+            maxOutputTokens: 999,
+          }),
+        }),
+        'prompt-id-2',
+      );
     });
 
     it('should not trigger summarization if token count is below threshold', async () => {

@@ -31,6 +31,19 @@ permissions:
   packages: 'read'
 
 jobs:
+  debug-info:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Print Issue Info'
+        run: |
+          echo "Issue Number: ${{ github.event.issue.number }}"
+          echo "Issue Title: ${{ github.event.issue.title }}"
+          echo "Issue Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}"
+          echo "Triggering Event: ${{ github.event_name }}"
+          if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
+            echo "Comment Body: ${{ github.event.comment.body }}"
+            echo "Comment Author: ${{ github.event.comment.author_association }}"
+          fi
   triage-issue:
     if: |-
       github.repository == 'google-gemini/gemini-cli' &&

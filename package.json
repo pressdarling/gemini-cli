@@ -92,6 +92,7 @@
   },
   "dependencies": {
     "@lvce-editor/ripgrep": "^2.1.0",
+    "ink": "github:chrstnb/ink#fixnestednewlines",
     "simple-git": "^3.28.0",
     "strip-ansi": "^7.1.0"
   },

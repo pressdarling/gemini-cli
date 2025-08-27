@@ -38,6 +38,14 @@ describe('FileTokenStorage', () => {
     unlink: ReturnType<typeof vi.fn>;
     mkdir: ReturnType<typeof vi.fn>;
   };
+  const existingCredentials: OAuthCredentials = {
+    serverName: 'existing-server',
+    token: {
+      accessToken: 'existing-token',
+      tokenType: 'Bearer',
+    },
+    updatedAt: Date.now() - 10000,
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,11 +57,12 @@ describe('FileTokenStorage', () => {
   });
 
   describe('getCredentials', () => {
-    it('should return null when file does not exist', async () => {
+    it('should throw error when file does not exist', async () => {
       mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
 
-      const result = await storage.getCredentials('test-server');
-      expect(result).toBeNull();
+      await expect(storage.getCredentials('test-server')).rejects.toThrow(
+        'Token file does not exist',
+      );
     });
 
     it('should return null for expired tokens', async () => {
@@ -96,17 +105,21 @@ describe('FileTokenStorage', () => {
       expect(result).toEqual(credentials);
     });
 
-    it('should handle corrupted files gracefully', async () => {
+    it('should throw error for corrupted files', async () => {
       mockFs.readFile.mockResolvedValue('corrupted-data');
 
-      const result = await storage.getCredentials('test-server');
-      expect(result).toBeNull();
+      await expect(storage.getCredentials('test-server')).rejects.toThrow(
+        'Invalid encrypted data format',
+      );
     });
   });
 
   describe('setCredentials', () => {
     it('should save credentials with encryption', async () => {
-      mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
+      const encryptedData = storage['encrypt'](
+        JSON.stringify({ 'existing-server': existingCredentials }),
+      );
+      mockFs.readFile.mockResolvedValue(encryptedData);
       mockFs.mkdir.mockResolvedValue(undefined);
       mockFs.writeFile.mockResolvedValue(undefined);
 
@@ -133,15 +146,6 @@ describe('FileTokenStorage', () => {
     });
 
     it('should update existing credentials', async () => {
-      const existingCredentials: OAuthCredentials = {
-        serverName: 'existing-server',
-        token: {
-          accessToken: 'existing-token',
-          tokenType: 'Bearer',
-        },
-        updatedAt: Date.now() - 10000,
-      };
-
       const encryptedData = storage['encrypt'](
         JSON.stringify({ 'existing-server': existingCredentials }),
       );
@@ -241,11 +245,12 @@ describe('FileTokenStorage', () => {
   });
 
   describe('listServers', () => {
-    it('should return empty array when file does not exist', async () => {
+    it('should throw error when file does not exist', async () => {
       mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
 
-      const result = await storage.listServers();
-      expect(result).toEqual([]);
+      await expect(storage.listServers()).rejects.toThrow(
+        'Token file does not exist',
+      );
     });
 
     it('should return list of server names', async () => {

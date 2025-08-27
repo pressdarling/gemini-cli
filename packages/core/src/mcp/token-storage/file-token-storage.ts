@@ -15,7 +15,7 @@ export class FileTokenStorage extends BaseTokenStorage {
   private readonly tokenFilePath: string;
   private readonly encryptionKey: Buffer;
 
-  constructor(serviceName: string = 'gemini-cli-mcp-oauth') {
+  constructor(serviceName: string) {
     super(serviceName);
     const configDir = path.join(os.homedir(), '.gemini');
     this.tokenFilePath = path.join(configDir, 'mcp-oauth-tokens-v2.json');

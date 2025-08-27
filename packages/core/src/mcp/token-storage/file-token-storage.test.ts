@@ -49,7 +49,7 @@ describe('FileTokenStorage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    storage = new FileTokenStorage();
+    storage = new FileTokenStorage('test-storage');
   });
 
   afterEach(() => {

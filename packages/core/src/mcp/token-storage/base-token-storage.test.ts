@@ -39,6 +39,10 @@ class TestTokenStorage extends BaseTokenStorage {
   override validateCredentials(credentials: OAuthCredentials): void {
     super.validateCredentials(credentials);
   }
+
+  override isTokenExpired(credentials: OAuthCredentials): boolean {
+    return super.isTokenExpired(credentials);
+  }
 }
 
 describe('BaseTokenStorage', () => {
@@ -131,7 +135,7 @@ describe('BaseTokenStorage', () => {
         updatedAt: Date.now(),
       };
 
-      expect(storage['isTokenExpired'](credentials)).toBe(false);
+      expect(storage.isTokenExpired(credentials)).toBe(false);
     });
 
     it('should return false for valid tokens', () => {
@@ -145,7 +149,7 @@ describe('BaseTokenStorage', () => {
         updatedAt: Date.now(),
       };
 
-      expect(storage['isTokenExpired'](credentials)).toBe(false);
+      expect(storage.isTokenExpired(credentials)).toBe(false);
     });
 
     it('should return true for expired tokens', () => {
@@ -159,7 +163,7 @@ describe('BaseTokenStorage', () => {
         updatedAt: Date.now(),
       };
 
-      expect(storage['isTokenExpired'](credentials)).toBe(true);
+      expect(storage.isTokenExpired(credentials)).toBe(true);
     });
 
     it('should apply 5-minute buffer for expiry check', () => {
@@ -174,7 +178,7 @@ describe('BaseTokenStorage', () => {
         updatedAt: Date.now(),
       };
 
-      expect(storage['isTokenExpired'](credentials)).toBe(true);
+      expect(storage.isTokenExpired(credentials)).toBe(true);
     });
   });
 

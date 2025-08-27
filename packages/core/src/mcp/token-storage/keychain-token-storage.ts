@@ -50,7 +50,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       throw new Error('Keychain is not available');
     }
 
-    const keytar = await this.getKeytar();
+    const keytar = this.keytarModule;
     if (!keytar) {
       throw new Error('Keytar module not available');
     }
@@ -83,7 +83,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       throw new Error('Keychain is not available');
     }
 
-    const keytar = await this.getKeytar();
+    const keytar = this.keytarModule;
     if (!keytar) {
       throw new Error('Keytar module not available');
     }
@@ -105,7 +105,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       throw new Error('Keychain is not available');
     }
 
-    const keytar = await this.getKeytar();
+    const keytar = this.keytarModule;
     if (!keytar) {
       throw new Error('Keytar module not available');
     }
@@ -126,7 +126,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       return [];
     }
 
-    const keytar = await this.getKeytar();
+    const keytar = this.keytarModule;
     if (!keytar) {
       return [];
     }
@@ -147,7 +147,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       return result;
     }
 
-    const keytar = await this.getKeytar();
+    const keytar = this.keytarModule;
     if (!keytar) {
       return result;
     }

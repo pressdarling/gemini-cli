@@ -43,6 +43,10 @@ class TestTokenStorage extends BaseTokenStorage {
   override isTokenExpired(credentials: OAuthCredentials): boolean {
     return super.isTokenExpired(credentials);
   }
+
+  override sanitizeServerName(serverName: string): string {
+    return super.sanitizeServerName(serverName);
+  }
 }
 
 describe('BaseTokenStorage', () => {
@@ -184,19 +188,19 @@ describe('BaseTokenStorage', () => {
 
   describe('sanitizeServerName', () => {
     it('should keep valid characters', () => {
-      expect(storage['sanitizeServerName']('test-server.example_123')).toBe(
+      expect(storage.sanitizeServerName('test-server.example_123')).toBe(
         'test-server.example_123',
       );
     });
 
     it('should replace invalid characters with underscore', () => {
-      expect(storage['sanitizeServerName']('test@server#example')).toBe(
+      expect(storage.sanitizeServerName('test@server#example')).toBe(
         'test_server_example',
       );
     });
 
     it('should handle special characters', () => {
-      expect(storage['sanitizeServerName']('test server/example:123')).toBe(
+      expect(storage.sanitizeServerName('test server/example:123')).toBe(
         'test_server_example_123',
       );
     });

@@ -33,18 +33,14 @@ async function getKeytar(): Promise<Keytar | null> {
   keytarLoadAttempted = true;
 
   try {
-    console.debug('Loading keytar module for OS keychain access...');
     // Try to import keytar without any timeout - let the OS handle it
     const moduleName = 'keytar';
     const module = await import(moduleName);
     keytarModule = module.default || module;
-    console.debug('Keytar module loaded successfully');
-    return keytarModule;
   } catch (error) {
-    console.debug('Failed to load keytar module:', error);
-    keytarModule = null;
-    return null;
+    console.error(error);
   }
+  return keytarModule;
 }
 
 export class KeychainTokenStorage extends BaseTokenStorage {
@@ -209,10 +205,8 @@ export class KeychainTokenStorage extends BaseTokenStorage {
     }
 
     try {
-      console.debug('Starting keychain availability test...');
       const keytar = await getKeytar();
       if (!keytar) {
-        console.debug('Keytar module not available');
         this.keychainAvailable = false;
         return false;
       }
@@ -220,19 +214,14 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       const testAccount = `__keychain_test__${crypto.randomBytes(8).toString('hex')}`;
       const testPassword = 'test';
 
-      console.debug('Testing keychain write access...');
       await keytar.setPassword(this.serviceName, testAccount, testPassword);
-      console.debug('Testing keychain read access...');
       const retrieved = await keytar.getPassword(this.serviceName, testAccount);
-      console.debug('Cleaning up test entry...');
       await keytar.deletePassword(this.serviceName, testAccount);
 
       const success = retrieved === testPassword;
-      console.debug(`Keychain test ${success ? 'passed' : 'failed'}`);
       this.keychainAvailable = success;
       return success;
     } catch (error) {
-      console.debug('Keychain availability check failed:', error);
       this.keychainAvailable = false;
       return false;
     }

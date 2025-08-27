@@ -11,11 +11,9 @@ import {
   beforeEach,
   afterEach,
   vi,
-  type Mocked,
 } from 'vitest';
 import { KeychainTokenStorage } from './keychain-token-storage.js';
 import type { OAuthCredentials } from './types.js';
-import * as crypto from 'node:crypto';
 
 // Hoist the mock to be available in the vi.mock factory
 const mockKeytar = vi.hoisted(() => ({
@@ -38,7 +36,6 @@ vi.mock('node:crypto', () => ({
 
 describe('KeychainTokenStorage', () => {
   let storage: KeychainTokenStorage;
-  const mockedCrypto = vi.mocked(crypto);
 
   beforeEach(async () => {
     vi.resetAllMocks();

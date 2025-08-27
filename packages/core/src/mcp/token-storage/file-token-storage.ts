@@ -15,7 +15,7 @@ export class FileTokenStorage extends BaseTokenStorage {
   private readonly tokenFilePath: string;
   private readonly encryptionKey: Buffer;
 
-  constructor(serviceName: string = 'gemini-cli-mcp-oauth') {
+  constructor(serviceName: string) {
     super(serviceName);
     const configDir = path.join(os.homedir(), '.gemini');
     this.tokenFilePath = path.join(configDir, 'mcp-oauth-tokens-v2.json');
@@ -24,7 +24,7 @@ export class FileTokenStorage extends BaseTokenStorage {
 
   private deriveEncryptionKey(): Buffer {
     const salt = `${os.hostname()}-${os.userInfo().username}-gemini-cli`;
-    return crypto.scryptSync(salt, 'gemini-cli-oauth', 32);
+    return crypto.scryptSync('gemini-cli-oauth', salt, 32);
   }
 
   private encrypt(text: string): string {
@@ -76,7 +76,7 @@ export class FileTokenStorage extends BaseTokenStorage {
     } catch (error: unknown) {
       const err = error as NodeJS.ErrnoException & { message?: string };
       if (err.code === 'ENOENT') {
-        return new Map();
+        throw new Error('Token file does not exist');
       }
       if (
         err.message?.includes('Invalid encrypted data format') ||
@@ -84,8 +84,7 @@ export class FileTokenStorage extends BaseTokenStorage {
           'Unsupported state or unable to authenticate data',
         )
       ) {
-        console.error('Token file corrupted, starting fresh');
-        return new Map();
+        throw new Error('Token file corrupted');
       }
       throw error;
     }

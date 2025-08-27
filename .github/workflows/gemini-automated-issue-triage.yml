@@ -126,7 +126,7 @@ jobs:
                {"labels_to_set": [], "explanation": "Unable to classify this issue with available labels"}
                ```
             9. Use Area definitions mentioned below to help you narrow down issues.
-            10. If you are uncertain, apply the status/manual-triage label
+            10. If you are uncertain, apply the status/manual-triage label and stop.
 
             ## Guidelines
 

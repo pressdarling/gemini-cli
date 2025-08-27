@@ -26,7 +26,7 @@ export const aboutCommand: SlashCommand = {
     const modelVersion = context.services.config?.getModel() || 'Unknown';
     const cliVersion = await getCliVersion();
     const selectedAuthType =
-      context.services.settings.merged.selectedAuthType || '';
+      context.services.settings.merged.security?.auth?.selectedType || '';
     // Only show GCP Project for auth types that actually use it
     const gcpProject =
       selectedAuthType === 'oauth-gca' ||

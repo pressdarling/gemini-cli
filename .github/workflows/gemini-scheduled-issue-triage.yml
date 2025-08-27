@@ -144,7 +144,7 @@ jobs:
               - Anything more than 6 versions older than the most recent should add the status/need-retesting label
             11. If you see that the issue doesn't look like it has sufficient information recommend the status/need-information label and leave a comment politely requesting the relevant information, eg.. if repro steps are missing request for repro steps. if version information is missing request for version information.
               - After identifying appropriate labels to an issue, add "status/need-triage" label to labels_to_remove in the output.
-            12. If you are uncertain, apply the status/manual-triage label and stop. 
+            12. If you are uncertain and have not been able to apply one each of kind/, area/ and priority/ , apply the status/manual-triage label.
 
             ## Guidelines
 

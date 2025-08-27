@@ -4,15 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import {
-  describe,
-  it,
-  expect,
-  beforeEach,
-  afterEach,
-  vi,
-} from 'vitest';
-import { KeychainTokenStorage } from './keychain-token-storage.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import type { KeychainTokenStorage } from './keychain-token-storage.js';
 import type { OAuthCredentials } from './types.js';
 
 // Hoist the mock to be available in the vi.mock factory
@@ -200,9 +193,7 @@ describe('KeychainTokenStorage', () => {
           'test-server',
           expect.any(String),
         );
-        const storedData = JSON.parse(
-          mockKeytar.setPassword.mock.calls[0][2],
-        );
+        const storedData = JSON.parse(mockKeytar.setPassword.mock.calls[0][2]);
         expect(storedData.serverName).toBe('test-server');
         expect(storedData.token.accessToken).toBe('access-token');
       });
@@ -256,7 +247,10 @@ describe('KeychainTokenStorage', () => {
         };
 
         mockKeytar.findCredentials.mockResolvedValue([
-          { account: 'test-server', password: JSON.stringify(validCredentials) },
+          {
+            account: 'test-server',
+            password: JSON.stringify(validCredentials),
+          },
           { account: 'server2', password: JSON.stringify(creds2) },
           { account: 'expired-server', password: JSON.stringify(expiredCreds) },
           { account: 'bad-server', password: 'not-json' },

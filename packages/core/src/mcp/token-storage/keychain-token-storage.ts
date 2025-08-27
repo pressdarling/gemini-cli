@@ -21,37 +21,36 @@ interface Keytar {
   ): Promise<Array<{ account: string; password: string }>>;
 }
 
-let keytarModule: Keytar | null = null;
-let keytarLoadAttempted = false;
-
-async function getKeytar(): Promise<Keytar | null> {
-  // If we've already tried loading (successfully or not), return the result
-  if (keytarLoadAttempted) {
-    return keytarModule;
-  }
-
-  keytarLoadAttempted = true;
-
-  try {
-    // Try to import keytar without any timeout - let the OS handle it
-    const moduleName = 'keytar';
-    const module = await import(moduleName);
-    keytarModule = module.default || module;
-  } catch (error) {
-    console.error(error);
-  }
-  return keytarModule;
-}
-
 export class KeychainTokenStorage extends BaseTokenStorage {
   private keychainAvailable: boolean | null = null;
+  private keytarModule: Keytar | null = null;
+  private keytarLoadAttempted = false;
+
+  async getKeytar(): Promise<Keytar | null> {
+    // If we've already tried loading (successfully or not), return the result
+    if (this.keytarLoadAttempted) {
+      return this.keytarModule;
+    }
+
+    this.keytarLoadAttempted = true;
+
+    try {
+      // Try to import keytar without any timeout - let the OS handle it
+      const moduleName = 'keytar';
+      const module = await import(moduleName);
+      this.keytarModule = module.default || module;
+    } catch (error) {
+      console.error(error);
+    }
+    return this.keytarModule;
+  }
 
   async getCredentials(serverName: string): Promise<OAuthCredentials | null> {
     if (!(await this.checkKeychainAvailability())) {
       throw new Error('Keychain is not available');
     }
 
-    const keytar = await getKeytar();
+    const keytar = await this.getKeytar();
     if (!keytar) {
       throw new Error('Keytar module not available');
     }
@@ -84,7 +83,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       throw new Error('Keychain is not available');
     }
 
-    const keytar = await getKeytar();
+    const keytar = await this.getKeytar();
     if (!keytar) {
       throw new Error('Keytar module not available');
     }
@@ -106,7 +105,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       throw new Error('Keychain is not available');
     }
 
-    const keytar = await getKeytar();
+    const keytar = await this.getKeytar();
     if (!keytar) {
       throw new Error('Keytar module not available');
     }
@@ -127,7 +126,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       return [];
     }
 
-    const keytar = await getKeytar();
+    const keytar = await this.getKeytar();
     if (!keytar) {
       return [];
     }
@@ -148,7 +147,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       return result;
     }
 
-    const keytar = await getKeytar();
+    const keytar = await this.getKeytar();
     if (!keytar) {
       return result;
     }
@@ -205,7 +204,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
     }
 
     try {
-      const keytar = await getKeytar();
+      const keytar = await this.getKeytar();
       if (!keytar) {
         this.keychainAvailable = false;
         return false;
@@ -221,7 +220,7 @@ export class KeychainTokenStorage extends BaseTokenStorage {
       const success = retrieved === testPassword;
       this.keychainAvailable = success;
       return success;
-    } catch (error) {
+    } catch (_error) {
       this.keychainAvailable = false;
       return false;
     }

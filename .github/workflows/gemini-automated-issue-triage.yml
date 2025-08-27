@@ -16,7 +16,7 @@ on:
         type: 'number'
 
 concurrency:
-  group: '${{ github.workflow }}-${{ github.event.issue.number }}'
+  group: '${{ github.workflow }}-${{ github.event.issue.number || github.event.inputs.issue_number }}'
   cancel-in-progress: true
 
 defaults:
@@ -29,36 +29,49 @@ permissions:
   issues: 'write'
   statuses: 'write'
   packages: 'read'
+  actions: 'write' # Required for cancelling a workflow run
 
 jobs:
-  debug-info:
+  triage-issue:
+    if: |- 
+      github.repository == 'google-gemini/gemini-cli' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          (github.event_name == 'issues' || github.event_name == 'issue_comment') &&
+          contains(github.event.issue.labels.*.name, 'status/need-triage') &&
+          (github.event_name != 'issue_comment' || (
+            contains(github.event.comment.body, '@gemini-cli /triage') &&
+            (github.event.comment.author_association == 'OWNER' || github.event.comment.author_association == 'MEMBER' || github.event.comment.author_association == 'COLLABORATOR')
+          ))
+        )
+      )
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
-      - name: 'Print Issue Info'
-        run: |
-          echo "Issue Number: ${{ github.event.issue.number }}"
-          echo "Issue Title: ${{ github.event.issue.title }}"
-          echo "Issue Labels: ${{ join(github.event.issue.labels.*.name, ', ') }}"
-          echo "Triggering Event: ${{ github.event_name }}"
-          if [[ "${{ github.event_name }}" == "issue_comment" ]]; then
-            echo "Comment Body: ${{ github.event.comment.body }}"
-            echo "Comment Author: ${{ github.event.comment.author_association }}"
-          fi
-  triage-issue:
-    if: |-
-      github.repository == 'google-gemini/gemini-cli' &&
-      (github.event_name == 'issues' ||
-       github.event_name == 'workflow_dispatch' ||
-       (github.event_name == 'issue_comment' &&
-       contains(github.event.comment.body, '@gemini-cli /triage') &&
-       (github.event.comment.author_association == 'OWNER' ||
-        github.event.comment.author_association == 'MEMBER' ||
-        github.event.comment.author_association == 'COLLABORATOR'))) &&
-        contains(github.event.issue.labels.*.name, 'status/need-triage')
-    timeout-minutes: 5
-    runs-on: 'ubuntu-latest'
+      - name: 'Get issue data for manual trigger'
+        id: get_issue_data
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/github-script@v6
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          script: |
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.inputs.issue_number }},
+            });
+            core.setOutput('title', issue.title);
+            core.setOutput('body', issue.body);
+            core.setOutput('labels', issue.labels.map(label => label.name).join(','));
+            return issue;
 
-    steps:
+      - name: 'Check for triage label on manual trigger'
+        if: github.event_name == 'workflow_dispatch' && !contains(steps.get_issue_data.outputs.labels, 'status/need-triage')
+        run: |
+          echo "Issue #${{ github.event.inputs.issue_number }} does not have the 'status/need-triage' label. Stopping workflow."
+          exit 1
+
       - name: 'Checkout'
         uses: 'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8' # ratchet:actions/checkout@v5
 
@@ -72,9 +85,9 @@ jobs:
 
       - name: 'Get Repository Labels'
         id: 'get_labels'
-        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        uses: 'actions/github-script@v6'
         with:
-          github-token: '${{ steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}'
+          github-token: '${{ steps.generate_token.outputs.token }}'
           script: |-
             const { data: labels } = await github.rest.issues.listLabelsForRepo({
               owner: context.repo.owner,
@@ -90,8 +103,8 @@ jobs:
         id: 'gemini_issue_analysis'
         env:
           GITHUB_TOKEN: '' # Do not pass any auth token here since this runs on untrusted inputs
-          ISSUE_TITLE: '${{ github.event.issue.title }}'
-          ISSUE_BODY: '${{ github.event.issue.body }}'
+          ISSUE_TITLE: "${{ github.event_name == 'workflow_dispatch' && steps.get_issue_data.outputs.title || github.event.issue.title }}"
+          ISSUE_BODY: "${{ github.event_name == 'workflow_dispatch' && steps.get_issue_data.outputs.body || github.event.issue.body }}"
           ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number}}'
           REPOSITORY: '${{ github.repository }}'
           AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
@@ -104,7 +117,7 @@ jobs:
           use_vertex_ai: '${{ vars.GOOGLE_GENAI_USE_VERTEXAI }}'
           use_gemini_code_assist: '${{ vars.GOOGLE_GENAI_USE_GCA }}'
           settings: |-
-            {
+            {{
               "maxSessionTurns": 25,
               "coreTools": [
                 "run_shell_command(echo)"
@@ -113,7 +126,7 @@ jobs:
                 "enabled": true,
                 "target": "gcp"
               }
-            }
+            }}
           prompt: |-
             ## Role
 
@@ -236,11 +249,11 @@ jobs:
           ${{ steps.gemini_issue_analysis.outputs.summary != '' }}
         env:
           REPOSITORY: '${{ github.repository }}'
-          ISSUE_NUMBER: '${{ github.event.issue.number }}'
+          ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
           LABELS_OUTPUT: '${{ steps.gemini_issue_analysis.outputs.summary }}'
-        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        uses: 'actions/github-script@v6'
         with:
-          github-token: '${{ steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}'
+          github-token: '${{ steps.generate_token.outputs.token }}'
           script: |-
             // Strip code block markers if present
             const rawLabels = process.env.LABELS_OUTPUT;
@@ -281,11 +294,11 @@ jobs:
         if: |-
           ${{ failure() && steps.gemini_issue_analysis.outcome == 'failure' }}
         env:
-          ISSUE_NUMBER: '${{ github.event.issue.number }}'
+          ISSUE_NUMBER: '${{ github.event.issue.number || github.event.inputs.issue_number }}'
           RUN_URL: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
-        uses: 'actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea'
+        uses: 'actions/github-script@v6'
         with:
-          github-token: '${{ steps.generate_token.outputs.token || secrets.GITHUB_TOKEN }}'
+          github-token: '${{ steps.generate_token.outputs.token }}'
           script: |-
             github.rest.issues.createComment({
               owner: context.repo.owner,

@@ -5,11 +5,12 @@
  */
 
 import type React from 'react';
-import { Text } from 'ink';
+import { Text, useIsScreenReaderEnabled } from 'ink';
 import Spinner from 'ink-spinner';
 import type { SpinnerName } from 'cli-spinners';
 import { useStreamingContext } from '../contexts/StreamingContext.js';
 import { StreamingState } from '../types.js';
+import { SCREEN_READER_LOADING } from '../textConstants.js';
 
 interface GeminiRespondingSpinnerProps {
   /**
@@ -24,8 +25,10 @@ export const GeminiRespondingSpinner: React.FC<
   GeminiRespondingSpinnerProps
 > = ({ nonRespondingDisplay, spinnerType = 'dots' }) => {
   const streamingState = useStreamingContext();
-
-  if (streamingState === StreamingState.Responding) {
+  const isScreenReaderEnabled = useIsScreenReaderEnabled();
+  if (isScreenReaderEnabled) {
+    return <Text>{SCREEN_READER_LOADING}</Text>;
+  } else if (streamingState === StreamingState.Responding) {
     return <Spinner type={spinnerType} />;
   } else if (nonRespondingDisplay) {
     return <Text>{nonRespondingDisplay}</Text>;

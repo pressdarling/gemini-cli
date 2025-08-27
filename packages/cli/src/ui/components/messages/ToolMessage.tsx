@@ -128,18 +128,22 @@ const ToolStatusIndicator: React.FC<ToolStatusIndicatorProps> = ({
       />
     )}
     {status === ToolCallStatus.Success && (
-      <Text color={Colors.AccentGreen}>✓</Text>
+      <Text color={Colors.AccentGreen} aria-label={'Success:'}>
+        ✓
+      </Text>
     )}
     {status === ToolCallStatus.Confirming && (
-      <Text color={Colors.AccentYellow}>?</Text>
+      <Text color={Colors.AccentYellow} aria-label={'Confirming:'}>
+        ?
+      </Text>
     )}
     {status === ToolCallStatus.Canceled && (
-      <Text color={Colors.AccentYellow} bold>
+      <Text color={Colors.AccentYellow} bold aria-label={'Canceled:'}>
         -
       </Text>
     )}
     {status === ToolCallStatus.Error && (
-      <Text color={Colors.AccentRed} bold>
+      <Text color={Colors.AccentRed} bold aria-label={'Error:'}>
         x
       </Text>
     )}

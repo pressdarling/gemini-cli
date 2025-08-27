@@ -13,13 +13,13 @@ import {
 import { getErrorMessage } from '../../utils/errors.js';
 
 interface InstallArgs {
-  path?: string;
+  path: string;
 }
 
 export async function handleLink(args: InstallArgs) {
   try {
     const installMetadata: ExtensionInstallMetadata = {
-      source: args.path as string,
+      source: args.path,
       type: 'link',
     };
     const extensionName = await installExtension(installMetadata);

@@ -39,7 +39,7 @@ export interface ExtensionConfig {
 
 export interface ExtensionInstallMetadata {
   source: string;
-  type: 'git' | 'local' | 'link'; // Added 'link' type
+  type: 'git' | 'local' | 'link';
 }
 
 export interface ExtensionUpdateInfo {
@@ -190,7 +190,7 @@ export function loadExtension(extensionDir: string): Extension | null {
   try {
     const configContent = fs.readFileSync(configFilePath, 'utf-8');
     const config = recursivelyHydrateStrings(JSON.parse(configContent), {
-      extensionPath: effectiveExtensionPath, // Use effective path for hydration
+      extensionPath: effectiveExtensionPath,
       '/': path.sep,
       pathSeparator: path.sep,
     }) as unknown as ExtensionConfig;
@@ -497,30 +497,11 @@ export async function updateExtension(
       `Extension cannot be updated because it is missing the .gemini-extension-install.json file. To update manually, uninstall and then reinstall the updated version.`,
     );
   }
-
+  if (extension.installMetadata.type === 'link') {
+    throw new Error(`Extension is linked so does not need to be updated`);
+  }
   const originalVersion = extension.config.version;
 
-  if (extension.installMetadata.type === 'link') {
-    const updatedExtension = loadExtension(extension.path);
-    if (!updatedExtension) {
-      throw new Error(
-        `Failed to reload linked extension "${extensionName}" after attempted update.`,
-      );
-    }
-    const updatedVersion = updatedExtension.config.version;
-    if (originalVersion === updatedVersion) {
-      console.log(
-        `Linked extension "${extensionName}" is already at the latest version (${originalVersion}).`,
-      );
-      return undefined;
-    }
-    return {
-      originalVersion,
-      updatedVersion,
-    };
-  }
-
-  // Original update logic for 'git' and 'local' types
   const tempDir = await ExtensionStorage.createTmpDir();
   try {
     await copyExtension(extension.path, tempDir);

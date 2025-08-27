@@ -209,7 +209,6 @@ export interface ConfigParameters {
   extensionManagement?: boolean;
   enablePromptCompletion?: boolean;
   useSmartEdit?: boolean;
-  enablePromptCompletion?: boolean;
 }
 
 export class Config {
@@ -285,6 +284,7 @@ export class Config {
   private initialized: boolean = false;
   readonly storage: Storage;
   private readonly fileExclusions: FileExclusions;
+  private readonly useSmartEdit: boolean;
 
   constructor(params: ConfigParameters) {
     this.sessionId = params.sessionId;

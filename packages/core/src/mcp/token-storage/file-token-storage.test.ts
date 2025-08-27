@@ -109,7 +109,7 @@ describe('FileTokenStorage', () => {
       mockFs.readFile.mockResolvedValue('corrupted-data');
 
       await expect(storage.getCredentials('test-server')).rejects.toThrow(
-        'Invalid encrypted data format',
+        'Token file corrupted',
       );
     });
   });
@@ -178,7 +178,7 @@ describe('FileTokenStorage', () => {
       mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
 
       await expect(storage.deleteCredentials('test-server')).rejects.toThrow(
-        'No credentials found for test-server',
+        'Token file does not exist',
       );
     });
 

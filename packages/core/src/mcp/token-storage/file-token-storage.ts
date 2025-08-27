@@ -76,7 +76,7 @@ export class FileTokenStorage extends BaseTokenStorage {
     } catch (error: unknown) {
       const err = error as NodeJS.ErrnoException & { message?: string };
       if (err.code === 'ENOENT') {
-        console.error('Token file does not exist');
+        throw new Error('Token file does not exist');
       }
       if (
         err.message?.includes('Invalid encrypted data format') ||
@@ -84,7 +84,7 @@ export class FileTokenStorage extends BaseTokenStorage {
           'Unsupported state or unable to authenticate data',
         )
       ) {
-        console.error('Token file corrupted');
+        throw new Error('Token file corrupted');
       }
       throw error;
     }

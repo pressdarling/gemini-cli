@@ -8,10 +8,7 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { Storage } from '../config/storage.js';
 import { getErrorMessage } from '../utils/errors.js';
-import type {
-  MCPOAuthToken,
-  MCPOAuthCredentials,
-} from './token-storage/types.js';
+import type { OAuthToken, OAuthCredentials } from './token-storage/types.js';
 
 /**
  * Class for managing MCP OAuth token storage and retrieval.
@@ -39,13 +36,13 @@ export class MCPOAuthTokenStorage {
    *
    * @returns A map of server names to credentials
    */
-  static async loadTokens(): Promise<Map<string, MCPOAuthCredentials>> {
-    const tokenMap = new Map<string, MCPOAuthCredentials>();
+  static async loadTokens(): Promise<Map<string, OAuthCredentials>> {
+    const tokenMap = new Map<string, OAuthCredentials>();
 
     try {
       const tokenFile = this.getTokenFilePath();
       const data = await fs.readFile(tokenFile, 'utf-8');
-      const tokens = JSON.parse(data) as MCPOAuthCredentials[];
+      const tokens = JSON.parse(data) as OAuthCredentials[];
 
       for (const credential of tokens) {
         tokenMap.set(credential.serverName, credential);
@@ -73,7 +70,7 @@ export class MCPOAuthTokenStorage {
    */
   static async saveToken(
     serverName: string,
-    token: MCPOAuthToken,
+    token: OAuthToken,
     clientId?: string,
     tokenUrl?: string,
     mcpServerUrl?: string,
@@ -82,7 +79,7 @@ export class MCPOAuthTokenStorage {
 
     const tokens = await this.loadTokens();
 
-    const credential: MCPOAuthCredentials = {
+    const credential: OAuthCredentials = {
       serverName,
       token,
       clientId,
@@ -116,9 +113,7 @@ export class MCPOAuthTokenStorage {
    * @param serverName The name of the MCP server
    * @returns The stored credentials or null if not found
    */
-  static async getToken(
-    serverName: string,
-  ): Promise<MCPOAuthCredentials | null> {
+  static async getToken(serverName: string): Promise<OAuthCredentials | null> {
     const tokens = await this.loadTokens();
     return tokens.get(serverName) || null;
   }
@@ -158,7 +153,7 @@ export class MCPOAuthTokenStorage {
    * @param token The token to check
    * @returns True if the token is expired
    */
-  static isTokenExpired(token: MCPOAuthToken): boolean {
+  static isTokenExpired(token: OAuthToken): boolean {
     if (!token.expiresAt) {
       return false; // No expiry, assume valid
     }

@@ -8,10 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import { MCPOAuthTokenStorage } from './oauth-token-storage.js';
-import type {
-  MCPOAuthToken,
-  MCPOAuthCredentials,
-} from './token-storage/types.js';
+import type { OAuthToken, OAuthCredentials } from './token-storage/types.js';
 
 // Mock file system operations
 vi.mock('node:fs', () => ({
@@ -29,7 +26,7 @@ vi.mock('node:os', () => ({
 }));
 
 describe('MCPOAuthTokenStorage', () => {
-  const mockToken: MCPOAuthToken = {
+  const mockToken: OAuthToken = {
     accessToken: 'access_token_123',
     refreshToken: 'refresh_token_456',
     tokenType: 'Bearer',
@@ -37,7 +34,7 @@ describe('MCPOAuthTokenStorage', () => {
     expiresAt: Date.now() + 3600000, // 1 hour from now
   };
 
-  const mockCredentials: MCPOAuthCredentials = {
+  const mockCredentials: OAuthCredentials = {
     serverName: 'test-server',
     token: mockToken,
     clientId: 'test-client-id',

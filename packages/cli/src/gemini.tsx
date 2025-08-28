@@ -23,7 +23,11 @@ import { getUserStartupWarnings } from './utils/userStartupWarnings.js';
 import { ConsolePatcher } from './ui/utils/ConsolePatcher.js';
 import { runNonInteractive } from './nonInteractiveCli.js';
 import { loadExtensions } from './config/extension.js';
-import { cleanupCheckpoints, registerCleanup } from './utils/cleanup.js';
+import {
+  cleanupCheckpoints,
+  registerCleanup,
+  runExitCleanup,
+} from './utils/cleanup.js';
 import { getCliVersion } from './utils/version.js';
 import type { Config } from '@google/gemini-cli-core';
 import {
@@ -45,6 +49,7 @@ import { checkForUpdates } from './ui/utils/updateCheck.js';
 import { handleAutoUpdate } from './utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from './utils/events.js';
 import { SettingsContext } from './ui/contexts/SettingsContext.js';
+import { writeFileSync } from 'node:fs';
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -107,7 +112,6 @@ async function relaunchWithAdditionalArgs(additionalArgs: string[]) {
   process.exit(0);
 }
 import { runZedIntegration } from './zed-integration/zedIntegration.js';
-import * as fs from 'node:fs';
 
 export function setupUnhandledRejectionHandler() {
   let unhandledRejectionOccurred = false;
@@ -192,6 +196,13 @@ export async function main() {
     sessionId,
     argv,
   );
+
+  if (argv.sessionSummary) {
+    registerCleanup(() => {
+      const metrics = uiTelemetryService.getMetrics();
+      writeFileSync(argv.sessionSummary!, JSON.stringify(metrics, null, 2));
+    });
+  }
 
   const consolePatcher = new ConsolePatcher({
     stderr: true,
@@ -385,12 +396,8 @@ export async function main() {
   }
 
   await runNonInteractive(nonInteractiveConfig, input, prompt_id);
-
-  if (argv.sessionSummary) {
-    const metrics = uiTelemetryService.getMetrics();
-    fs.writeFileSync(argv.sessionSummary, JSON.stringify(metrics, null, 2));
-  }
-
+  // Call cleanup before process.exit, which causes cleanup to not run
+  await runExitCleanup();
   process.exit(0);
 }
 

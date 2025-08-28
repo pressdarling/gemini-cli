@@ -113,4 +113,12 @@ describe('FolderTrustDialog', () => {
       expect(process.exit).not.toHaveBeenCalled();
     });
   });
+
+  it('should display the parent folder name in the options', () => {
+    const { lastFrame } = renderWithProviders(
+      <FolderTrustDialog onSelect={vi.fn()} parentFolder="my-parent-folder" />,
+    );
+
+    expect(lastFrame()).toContain('Trust parent folder (my-parent-folder)');
+  });
 });

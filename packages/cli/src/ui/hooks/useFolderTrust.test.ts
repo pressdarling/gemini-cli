@@ -189,4 +189,22 @@ describe('useFolderTrust', () => {
     expect(result.current.isRestarting).toBe(false);
     expect(result.current.isFolderTrustDialogOpen).toBe(false); // Dialog should close
   });
+
+  it('should set parent folder name when folder trust is undefined', () => {
+    isWorkspaceTrustedSpy.mockReturnValue(undefined);
+    (process.cwd as vi.Mock).mockReturnValue('/test/path/to/folder');
+    const { result } = renderHook(() =>
+      useFolderTrust(mockSettings, onTrustChange),
+    );
+    expect(result.current.parentFolder).toBe('to');
+  });
+
+  it('should not set parent folder name when folder trust is defined', () => {
+    isWorkspaceTrustedSpy.mockReturnValue(true);
+    (process.cwd as vi.Mock).mockReturnValue('/test/path/to/folder');
+    const { result } = renderHook(() =>
+      useFolderTrust(mockSettings, onTrustChange),
+    );
+    expect(result.current.parentFolder).toBe('');
+  });
 });

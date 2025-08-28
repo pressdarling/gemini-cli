@@ -19,7 +19,6 @@ const mockKeytar = vi.hoisted(() => ({
 const mockServiceName = 'service-name';
 const mockCryptoRandomBytesString = 'random-string';
 
-
 // Mock the dynamic import of 'keytar'
 vi.mock('keytar', () => ({
   default: mockKeytar,
@@ -196,7 +195,7 @@ describe('KeychainTokenStorage', () => {
         expect(mockKeytar.setPassword).toHaveBeenCalledWith(
           mockServiceName,
           'test-server',
-          JSON.stringify({...validCredentials, updatedAt: Date.now()})
+          JSON.stringify({ ...validCredentials, updatedAt: Date.now() }),
         );
       });
     });

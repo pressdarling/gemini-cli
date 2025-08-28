@@ -585,6 +585,7 @@ describe('updateExtension', () => {
     const updateInfo = await updateExtension(loadExtension(targetExtDir));
 
     expect(updateInfo).toEqual({
+      name: 'gemini-extensions',
       originalVersion: '1.0.0',
       updatedVersion: '1.1.0',
     });

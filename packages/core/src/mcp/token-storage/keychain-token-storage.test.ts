@@ -16,6 +16,10 @@ const mockKeytar = vi.hoisted(() => ({
   findCredentials: vi.fn(),
 }));
 
+const mockServiceName = 'service-name';
+const mockCryptoRandomBytesString = 'random-string';
+
+
 // Mock the dynamic import of 'keytar'
 vi.mock('keytar', () => ({
   default: mockKeytar,
@@ -23,7 +27,7 @@ vi.mock('keytar', () => ({
 
 vi.mock('node:crypto', () => ({
   randomBytes: vi.fn(() => ({
-    toString: vi.fn(() => 'random-string'),
+    toString: vi.fn(() => mockCryptoRandomBytesString),
   })),
 }));
 
@@ -37,7 +41,7 @@ describe('KeychainTokenStorage', () => {
     const { KeychainTokenStorage } = await import(
       './keychain-token-storage.js'
     );
-    storage = new KeychainTokenStorage();
+    storage = new KeychainTokenStorage(mockServiceName);
   });
 
   afterEach(() => {
@@ -63,17 +67,17 @@ describe('KeychainTokenStorage', () => {
       const isAvailable = await storage.checkKeychainAvailability();
       expect(isAvailable).toBe(true);
       expect(mockKeytar.setPassword).toHaveBeenCalledWith(
-        'gemini-cli-mcp-oauth',
-        '__keychain_test__random-string',
+        mockServiceName,
+        `__keychain_test__${mockCryptoRandomBytesString}`,
         'test',
       );
       expect(mockKeytar.getPassword).toHaveBeenCalledWith(
-        'gemini-cli-mcp-oauth',
-        '__keychain_test__random-string',
+        mockServiceName,
+        `__keychain_test__${mockCryptoRandomBytesString}`,
       );
       expect(mockKeytar.deletePassword).toHaveBeenCalledWith(
-        'gemini-cli-mcp-oauth',
-        '__keychain_test__random-string',
+        mockServiceName,
+        `__keychain_test__${mockCryptoRandomBytesString}`,
       );
     });
 
@@ -153,7 +157,7 @@ describe('KeychainTokenStorage', () => {
         const result = await storage.getCredentials('test-server');
         expect(result).toBeNull();
         expect(mockKeytar.getPassword).toHaveBeenCalledWith(
-          'gemini-cli-mcp-oauth',
+          mockServiceName,
           'test-server',
         );
       });
@@ -189,7 +193,7 @@ describe('KeychainTokenStorage', () => {
         mockKeytar.setPassword.mockResolvedValue(undefined);
         await storage.setCredentials(validCredentials);
         expect(mockKeytar.setPassword).toHaveBeenCalledWith(
-          'gemini-cli-mcp-oauth',
+          mockServiceName,
           'test-server',
           expect.any(String),
         );
@@ -204,7 +208,7 @@ describe('KeychainTokenStorage', () => {
         mockKeytar.deletePassword.mockResolvedValue(true);
         await storage.deleteCredentials('test-server');
         expect(mockKeytar.deletePassword).toHaveBeenCalledWith(
-          'gemini-cli-mcp-oauth',
+          mockServiceName,
           'test-server',
         );
       });
@@ -277,11 +281,11 @@ describe('KeychainTokenStorage', () => {
 
         expect(mockKeytar.deletePassword).toHaveBeenCalledTimes(2);
         expect(mockKeytar.deletePassword).toHaveBeenCalledWith(
-          'gemini-cli-mcp-oauth',
+          mockServiceName,
           'server1',
         );
         expect(mockKeytar.deletePassword).toHaveBeenCalledWith(
-          'gemini-cli-mcp-oauth',
+          mockServiceName,
           'server2',
         );
       });

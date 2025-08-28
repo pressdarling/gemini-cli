@@ -59,6 +59,9 @@ describe('ShellTool', () => {
       getWorkspaceContext: () => createMockWorkspaceContext('.'),
       getGeminiClient: vi.fn(),
       getShouldUseNodePtyShell: vi.fn().mockReturnValue(false),
+      getFolderTrustFeature: vi.fn().mockReturnValue(false),
+      getFolderTrust: vi.fn().mockReturnValue(false),
+      isInteractive: false,
     } as unknown as Config;
 
     shellTool = new ShellTool(mockConfig);
@@ -186,6 +189,82 @@ describe('ShellTool', () => {
         undefined,
         undefined,
       );
+    });
+
+    describe('noninteractive with folder trust enabled', () => {
+      it('should allow command if folder is trusted', async () => {
+        const fakeConfig = {
+          ...mockConfig,
+          getFolderTrustFeature: vi.fn().mockReturnValue(true),
+          getFolderTrust: vi.fn().mockReturnValue(true),
+          isInteractive: false,
+        } as unknown as Config;
+        shellTool = new ShellTool(fakeConfig);
+        (mockConfig.getSummarizeToolOutputConfig as Mock).mockReturnValue({
+          [shellTool.name]: { tokenBudget: 1000 },
+        });
+        vi.mocked(summarizer.summarizeToolOutput).mockResolvedValue(
+          'summarized output',
+        );
+
+        const invocation = shellTool.build({ command: 'ls' });
+        const promise = invocation.execute(mockAbortSignal);
+        resolveExecutionPromise({
+          output: 'long output',
+          rawOutput: Buffer.from('long output'),
+          exitCode: 0,
+          signal: null,
+          error: null,
+          aborted: false,
+          pid: 12345,
+          executionMethod: 'child_process',
+        });
+
+        const result = await promise;
+
+        expect(summarizer.summarizeToolOutput).toHaveBeenCalledWith(
+          expect.any(String),
+          mockConfig.getGeminiClient(),
+          mockAbortSignal,
+          1000,
+        );
+        expect(result.llmContent).toBe('summarized output');
+        expect(result.returnDisplay).toBe('long output');
+      });
+
+      it('should return error if folder is not trusted', async () => {
+        const fakeConfig = {
+          ...mockConfig,
+          getFolderTrustFeature: vi.fn().mockReturnValue(true),
+          getFolderTrust: vi.fn().mockReturnValue(false),
+          isInteractive: false,
+        } as unknown as Config;
+        shellTool = new ShellTool(fakeConfig);
+
+        const invocation = shellTool.build({ command: 'user-command' });
+        const promise = invocation.execute(mockAbortSignal);
+        resolveExecutionPromise({
+          output: 'long output',
+          rawOutput: Buffer.from('long output'),
+          exitCode: 0,
+          signal: null,
+          error: null,
+          aborted: false,
+          pid: 12345,
+          executionMethod: 'child_process',
+        });
+
+        const result = await promise;
+
+        expect(result.llmContent).toBe(
+          'Current folder is untrusted and cannot be used to run a shell command',
+        );
+        expect(result.returnDisplay).toBe('Current folder is untrusted');
+        expect(result.error).toEqual({
+          message: 'Current folder is untrusted',
+          type: ToolErrorType.SHELL_EXECUTE_UNTRUSTED_FOLDER,
+        });
+      });
     });
 
     it('should format error messages correctly', async () => {

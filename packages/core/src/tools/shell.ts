@@ -109,6 +109,23 @@ class ShellToolInvocation extends BaseToolInvocation<
       };
     }
 
+    // If non-interactive and folder is not trusted, then block.
+    if (
+      !this.config.isInteractive &&
+      this.config.getFolderTrustFeature() &&
+      !this.config.getFolderTrust()
+    ) {
+      return {
+        llmContent:
+          'Current folder is untrusted and cannot be used to run a shell command',
+        returnDisplay: 'Current folder is untrusted',
+        error: {
+          message: 'Current folder is untrusted',
+          type: ToolErrorType.SHELL_EXECUTE_UNTRUSTED_FOLDER,
+        },
+      };
+    }
+
     const isWindows = os.platform() === 'win32';
     const tempFileName = `shell_pgrep_${crypto
       .randomBytes(6)

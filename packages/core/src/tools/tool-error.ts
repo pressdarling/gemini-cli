@@ -55,6 +55,7 @@ export enum ToolErrorType {
 
   // Shell errors
   SHELL_EXECUTE_ERROR = 'shell_execute_error',
+  SHELL_EXECUTE_UNTRUSTED_FOLDER = 'shell_execute_untrusted_folder',
 
   // DiscoveredTool-specific Errors
   DISCOVERED_TOOL_EXECUTION_ERROR = 'discovered_tool_execution_error',

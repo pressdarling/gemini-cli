@@ -123,7 +123,7 @@ describe('IDEServer', () => {
     const port = getPortFromMock(replaceMock);
     const expectedPortFile = path.join(
       '/tmp',
-      `gemini-ide-server-${process.ppid}.json`,
+      `gemini-ide-server-${port}.json`,
     );
     expect(fs.writeFile).toHaveBeenCalledWith(
       expectedPortFile,
@@ -148,7 +148,7 @@ describe('IDEServer', () => {
     const port = getPortFromMock(replaceMock);
     const expectedPortFile = path.join(
       '/tmp',
-      `gemini-ide-server-${process.ppid}.json`,
+      `gemini-ide-server-${port}.json`,
     );
     expect(fs.writeFile).toHaveBeenCalledWith(
       expectedPortFile,
@@ -173,7 +173,7 @@ describe('IDEServer', () => {
     const port = getPortFromMock(replaceMock);
     const expectedPortFile = path.join(
       '/tmp',
-      `gemini-ide-server-${process.ppid}.json`,
+      `gemini-ide-server-${port}.json`,
     );
     expect(fs.writeFile).toHaveBeenCalledWith(
       expectedPortFile,
@@ -212,7 +212,7 @@ describe('IDEServer', () => {
     const port = getPortFromMock(replaceMock);
     const expectedPortFile = path.join(
       '/tmp',
-      `gemini-ide-server-${process.ppid}.json`,
+      `gemini-ide-server-${port}.json`,
     );
     expect(fs.writeFile).toHaveBeenCalledWith(
       expectedPortFile,
@@ -241,10 +241,9 @@ describe('IDEServer', () => {
 
   it('should clear env vars and delete port file on stop', async () => {
     await ideServer.start(mockContext);
-    const portFile = path.join(
-      '/tmp',
-      `gemini-ide-server-${process.ppid}.json`,
-    );
+    const replaceMock = mockContext.environmentVariableCollection.replace;
+    const port = getPortFromMock(replaceMock);
+    const portFile = path.join('/tmp', `gemini-ide-server-${port}.json`);
     expect(fs.writeFile).toHaveBeenCalledWith(portFile, expect.any(String));
 
     await ideServer.stop();
@@ -273,7 +272,7 @@ describe('IDEServer', () => {
       const port = getPortFromMock(replaceMock);
       const expectedPortFile = path.join(
         '/tmp',
-        `gemini-ide-server-${process.ppid}.json`,
+        `gemini-ide-server-${port}.json`,
       );
       expect(fs.writeFile).toHaveBeenCalledWith(
         expectedPortFile,

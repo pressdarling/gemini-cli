@@ -80,17 +80,13 @@ export class IDEServer {
   private server: HTTPServer | undefined;
   private context: vscode.ExtensionContext | undefined;
   private log: (message: string) => void;
-  private portFile: string;
+  private portFile: string | undefined;
   private port: number | undefined;
   diffManager: DiffManager;
 
   constructor(log: (message: string) => void, diffManager: DiffManager) {
     this.log = log;
     this.diffManager = diffManager;
-    this.portFile = path.join(
-      os.tmpdir(),
-      `gemini-ide-server-${process.ppid}.json`,
-    );
   }
 
   start(context: vscode.ExtensionContext): Promise<void> {
@@ -233,6 +229,10 @@ export class IDEServer {
         const address = (this.server as HTTPServer).address();
         if (address && typeof address !== 'string') {
           this.port = address.port;
+          this.portFile = path.join(
+            os.tmpdir(),
+            `gemini-ide-server-${this.port}.json`,
+          );
           this.log(`IDE server listening on port ${this.port}`);
           await writePortAndWorkspace(
             context,
@@ -247,7 +247,7 @@ export class IDEServer {
   }
 
   async updateWorkspacePath(): Promise<void> {
-    if (this.context && this.port) {
+    if (this.context && this.port && this.portFile) {
       await writePortAndWorkspace(
         this.context,
         this.port,
@@ -275,10 +275,12 @@ export class IDEServer {
     if (this.context) {
       this.context.environmentVariableCollection.clear();
     }
-    try {
-      await fs.unlink(this.portFile);
-    } catch (_err) {
-      // Ignore errors if the file doesn't exist.
+    if (this.portFile) {
+      try {
+        await fs.unlink(this.portFile);
+      } catch (_err) {
+        // Ignore errors if the file doesn't exist.
+      }
     }
   }
 }

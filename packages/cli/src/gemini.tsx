@@ -203,6 +203,9 @@ export async function main() {
     process.on('SIGINT', () => {
       process.stdin.setRawMode(wasRaw);
     });
+    process.on('exit', () => {
+      process.stdin.setRawMode(wasRaw);
+    });
 
     // Detect and enable Kitty keyboard protocol once at startup.
     kittyProtocolDetectionComplete = detectAndEnableKittyProtocol();

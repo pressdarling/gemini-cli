@@ -17,8 +17,8 @@ interface UpdateArgs {
   all?: boolean;
 }
 
-const updateOutput = (info: ExtensionUpdateInfo, name: string) =>
-  `Extension "${name}" successfully updated: ${info.originalVersion} → ${info.updatedVersion}.`;
+const updateOutput = (info: ExtensionUpdateInfo) =>
+  `Extension "${info.name}" successfully updated: ${info.originalVersion} → ${info.updatedVersion}.`;
 
 export async function handleUpdate(args: UpdateArgs) {
   if (args.all) {
@@ -28,11 +28,7 @@ export async function handleUpdate(args: UpdateArgs) {
         console.log('No extensions to update.');
         return;
       }
-      console.log(
-        updateInfos
-          .map((info) => updateOutput(info, info.originalVersion))
-          .join('\n'),
-      );
+      console.log(updateInfos.map((info) => updateOutput(info)).join('\n'));
     } catch (error) {
       console.error(getErrorMessage(error));
     }
@@ -55,7 +51,7 @@ export async function handleUpdate(args: UpdateArgs) {
 }
 
 export const updateCommand: CommandModule = {
-  command: 'update [--all] <name>',
+  command: 'update [--all] [name]',
   describe:
     'Updates all extensions or a named extension to the latest version.',
   builder: (yargs) =>

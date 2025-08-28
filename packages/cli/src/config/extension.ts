@@ -43,6 +43,7 @@ export interface ExtensionInstallMetadata {
 }
 
 export interface ExtensionUpdateInfo {
+  name: string;
   originalVersion: string;
   updatedVersion: string;
 }
@@ -469,6 +470,7 @@ export async function updateExtension(
     }
     const updatedVersion = updatedExtension.config.version;
     return {
+      name: extension.config.name,
       originalVersion,
       updatedVersion,
     };

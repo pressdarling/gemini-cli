@@ -21,11 +21,13 @@ export enum FolderTrustChoice {
 interface FolderTrustDialogProps {
   onSelect: (choice: FolderTrustChoice) => void;
   isRestarting?: boolean;
+  parentFolder?: string;
 }
 
 export const FolderTrustDialog: React.FC<FolderTrustDialogProps> = ({
   onSelect,
   isRestarting,
+  parentFolder,
 }) => {
   useKeypress(
     (key) => {
@@ -51,7 +53,7 @@ export const FolderTrustDialog: React.FC<FolderTrustDialogProps> = ({
       value: FolderTrustChoice.TRUST_FOLDER,
     },
     {
-      label: 'Trust parent folder',
+      label: `Trust parent folder (${parentFolder})`,
       value: FolderTrustChoice.TRUST_PARENT,
     },
     {

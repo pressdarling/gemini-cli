@@ -25,7 +25,7 @@ describe('FolderTrustDialog', () => {
 
   it('should render the dialog with title and description', () => {
     const { lastFrame } = renderWithProviders(
-      <FolderTrustDialog onSelect={vi.fn()} />,
+      <FolderTrustDialog onSelect={vi.fn()} parentFolder="parent" />,
     );
 
     expect(lastFrame()).toContain('Do you trust this folder?');
@@ -37,7 +37,11 @@ describe('FolderTrustDialog', () => {
   it('should call onSelect with DO_NOT_TRUST when escape is pressed and not restarting', async () => {
     const onSelect = vi.fn();
     const { stdin } = renderWithProviders(
-      <FolderTrustDialog onSelect={onSelect} isRestarting={false} />,
+      <FolderTrustDialog
+        onSelect={onSelect}
+        isRestarting={false}
+        parentFolder="parent"
+      />,
     );
 
     stdin.write('\x1b'); // escape key
@@ -50,7 +54,11 @@ describe('FolderTrustDialog', () => {
   it('should not call onSelect when escape is pressed and is restarting', async () => {
     const onSelect = vi.fn();
     const { stdin } = renderWithProviders(
-      <FolderTrustDialog onSelect={onSelect} isRestarting={true} />,
+      <FolderTrustDialog
+        onSelect={onSelect}
+        isRestarting={true}
+        parentFolder="parent"
+      />,
     );
 
     stdin.write('\x1b'); // escape key
@@ -62,7 +70,11 @@ describe('FolderTrustDialog', () => {
 
   it('should display restart message when isRestarting is true', () => {
     const { lastFrame } = renderWithProviders(
-      <FolderTrustDialog onSelect={vi.fn()} isRestarting={true} />,
+      <FolderTrustDialog
+        onSelect={vi.fn()}
+        isRestarting={true}
+        parentFolder="parent"
+      />,
     );
 
     expect(lastFrame()).toContain(
@@ -72,7 +84,11 @@ describe('FolderTrustDialog', () => {
 
   it('should call process.exit when "r" is pressed and isRestarting is true', async () => {
     const { stdin } = renderWithProviders(
-      <FolderTrustDialog onSelect={vi.fn()} isRestarting={true} />,
+      <FolderTrustDialog
+        onSelect={vi.fn()}
+        isRestarting={true}
+        parentFolder="parent"
+      />,
     );
 
     stdin.write('r');
@@ -84,7 +100,11 @@ describe('FolderTrustDialog', () => {
 
   it('should not call process.exit when "r" is pressed and isRestarting is false', async () => {
     const { stdin } = renderWithProviders(
-      <FolderTrustDialog onSelect={vi.fn()} isRestarting={false} />,
+      <FolderTrustDialog
+        onSelect={vi.fn()}
+        isRestarting={false}
+        parentFolder="parent"
+      />,
     );
 
     stdin.write('r');

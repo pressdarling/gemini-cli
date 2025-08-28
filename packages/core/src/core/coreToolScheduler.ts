@@ -16,12 +16,12 @@ import type {
   ToolConfirmationPayload,
   AnyDeclarativeTool,
   AnyToolInvocation,
-  ReadFileTool,
 } from '../index.js';
 import {
   ToolConfirmationOutcome,
   ApprovalMode,
   logToolCall,
+  ReadFileTool,
   ToolErrorType,
   ToolCallEvent,
 } from '../index.js';
@@ -33,8 +33,8 @@ import {
   modifyWithEditor,
 } from '../tools/modifiable-tool.js';
 import * as Diff from 'diff';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
 import { doesToolInvocationMatch } from '../utils/tool-utils.js';
 import levenshtein from 'fast-levenshtein';
 
@@ -246,15 +246,14 @@ const createErrorResponse = (
   errorType,
 });
 
-const TRUNCATION_THRESHOLD = 400_000;
-const TRUNCATION_LINES = 1_000;
-
 export async function truncateAndSaveToFile(
   content: string,
   callId: string,
   projectTempDir: string,
+  threshold: number,
+  truncateLines: number,
 ): Promise<{ content: string; outputFile?: string }> {
-  if (content.length <= TRUNCATION_THRESHOLD) {
+  if (content.length <= threshold) {
     return { content };
   }
 
@@ -262,12 +261,12 @@ export async function truncateAndSaveToFile(
   let truncatedContent: string;
 
   // Determine the truncated content for display based on its structure.
-  if (lines.length > TRUNCATION_LINES) {
+  if (lines.length > truncateLines) {
     // Content has many lines; truncate by line count.
-    truncatedContent = lines.slice(-TRUNCATION_LINES).join('\n');
+    truncatedContent = lines.slice(-truncateLines).join('\n');
   } else {
     // Content has few lines (or one very long line); truncate by character count.
-    truncatedContent = content.slice(-TRUNCATION_THRESHOLD);
+    truncatedContent = content.slice(-threshold);
   }
 
   // Sanitize callId to prevent path traversal.
@@ -963,12 +962,14 @@ export class CoreToolScheduler {
               let outputFile: string | undefined = undefined;
               if (
                 typeof content === 'string' &&
-                this.config.getTruncateToolOutput()
+                this.config.getTruncateToolOutputThreshold() > 0
               ) {
                 ({ content, outputFile } = await truncateAndSaveToFile(
                   content,
                   callId,
                   this.config.storage.getProjectTempDir(),
+                  this.config.getTruncateToolOutputThreshold(),
+                  this.config.getTruncateToolOutputLines(),
                 ));
               }
 

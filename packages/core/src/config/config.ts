@@ -207,7 +207,8 @@ export interface ConfigParameters {
   skipNextSpeakerCheck?: boolean;
   extensionManagement?: boolean;
   enablePromptCompletion?: boolean;
-  truncateToolOutput?: boolean;
+  truncateToolOutputThreshold?: number;
+  truncateToolOutputLines?: number;
 }
 
 export class Config {
@@ -280,7 +281,8 @@ export class Config {
   private readonly skipNextSpeakerCheck: boolean;
   private readonly extensionManagement: boolean;
   private readonly enablePromptCompletion: boolean = false;
-  private readonly truncateToolOutput: boolean;
+  private readonly truncateToolOutputThreshold: number;
+  private readonly truncateToolOutputLines: number;
   private initialized: boolean = false;
   readonly storage: Storage;
   private readonly fileExclusions: FileExclusions;
@@ -354,7 +356,9 @@ export class Config {
     this.useRipgrep = params.useRipgrep ?? false;
     this.shouldUseNodePtyShell = params.shouldUseNodePtyShell ?? false;
     this.skipNextSpeakerCheck = params.skipNextSpeakerCheck ?? false;
-    this.truncateToolOutput = params.truncateToolOutput ?? false;
+    this.truncateToolOutputThreshold =
+      params.truncateToolOutputThreshold ?? 4_000_000;
+    this.truncateToolOutputLines = params.truncateToolOutputLines ?? 1000;
     this.extensionManagement = params.extensionManagement ?? false;
     this.storage = new Storage(this.targetDir);
     this.enablePromptCompletion = params.enablePromptCompletion ?? false;
@@ -797,8 +801,12 @@ export class Config {
     return this.enablePromptCompletion;
   }
 
-  getTruncateToolOutput(): boolean {
-    return this.truncateToolOutput;
+  getTruncateToolOutputThreshold(): number {
+    return this.truncateToolOutputThreshold;
+  }
+
+  getTruncateToolOutputLines(): number {
+    return this.truncateToolOutputLines;
   }
 
   async getGitService(): Promise<GitService> {

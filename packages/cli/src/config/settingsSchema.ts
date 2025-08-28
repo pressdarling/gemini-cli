@@ -803,14 +803,23 @@ export const SETTINGS_SCHEMA = {
       'Enable AI-powered prompt completion suggestions while typing.',
     showInDialog: true,
   },
-  truncateToolOutput: {
-    type: 'boolean',
-    label: 'Truncate Tool Output',
+  truncateToolOutputThreshold: {
+    type: 'number',
+    label: 'Tool Output Truncation Threshold',
     category: 'General',
     requiresRestart: false,
-    default: false,
+    default: 4_000_000,
     description:
-      'Truncate tool output if it is too large and save it to a file.',
+      'Truncate tool output if it is larger than this many characters. Set to -1 to disable.',
+    showInDialog: true,
+  },
+  truncateToolOutputLines: {
+    type: 'number',
+    label: 'Tool Output Truncation Lines',
+    category: 'General',
+    requiresRestart: false,
+    default: 1_000,
+    description: 'The number of lines to keep when truncating tool output.',
     showInDialog: true,
   },
   debugKeystrokeLogging: {

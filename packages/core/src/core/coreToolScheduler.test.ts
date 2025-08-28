@@ -29,8 +29,11 @@ import {
 } from '../index.js';
 import type { Part, PartListUnion } from '@google/genai';
 import { MockModifiableTool, MockTool } from '../test-utils/tools.js';
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+
+const DEFAULT_TRUNCATE_THRESHOLD = 4_000_000;
+const DEFAULT_TRUNCATE_LINES = 1000;
 
 // Mock fs for testing
 vi.mock('fs/promises', () => ({
@@ -178,7 +181,8 @@ describe('CoreToolScheduler', () => {
       storage: {
         getProjectTempDir: () => '/tmp',
       },
-      getTruncateToolOutput: () => true,
+      getTruncateToolOutputThreshold: () => DEFAULT_TRUNCATE_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_LINES,
       getToolRegistry: () => mockToolRegistry,
     } as unknown as Config;
 
@@ -279,7 +283,8 @@ describe('CoreToolScheduler with payload', () => {
       storage: {
         getProjectTempDir: () => '/tmp',
       },
-      getTruncateToolOutput: () => true,
+      getTruncateToolOutputThreshold: () => DEFAULT_TRUNCATE_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_LINES,
       getToolRegistry: () => mockToolRegistry,
     } as unknown as Config;
 
@@ -688,7 +693,8 @@ describe('CoreToolScheduler YOLO mode', () => {
         getProjectTempDir: () => '/tmp',
       },
       getToolRegistry: () => mockToolRegistry,
-      getTruncateToolOutput: () => true,
+      getTruncateToolOutputThreshold: () => DEFAULT_TRUNCATE_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_LINES,
     } as unknown as Config;
 
     const scheduler = new CoreToolScheduler({
@@ -785,7 +791,8 @@ describe('CoreToolScheduler request queueing', () => {
       storage: {
         getProjectTempDir: () => '/tmp',
       },
-      getTruncateToolOutput: () => true,
+      getTruncateToolOutputThreshold: () => DEFAULT_TRUNCATE_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_LINES,
       getToolRegistry: () => mockToolRegistry,
     } as unknown as Config;
 
@@ -903,6 +910,11 @@ describe('CoreToolScheduler request queueing', () => {
         model: 'test-model',
         authType: 'oauth-personal',
       }),
+      storage: {
+        getProjectTempDir: () => '/tmp',
+      },
+      getTruncateToolOutputThreshold: () => DEFAULT_TRUNCATE_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_LINES,
     } as unknown as Config;
 
     const scheduler = new CoreToolScheduler({
@@ -924,6 +936,11 @@ describe('CoreToolScheduler request queueing', () => {
 
     // Act
     await scheduler.schedule([request], abortController.signal);
+
+    // Wait for the tool execution to complete
+    await vi.waitFor(() => {
+      expect(onAllToolCallsComplete).toHaveBeenCalled();
+    });
 
     // Assert
     // 1. The tool's execute method was called directly.
@@ -985,7 +1002,8 @@ describe('CoreToolScheduler request queueing', () => {
       storage: {
         getProjectTempDir: () => '/tmp',
       },
-      getTruncateToolOutput: () => true,
+      getTruncateToolOutputThreshold: () => DEFAULT_TRUNCATE_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_LINES,
       getToolRegistry: () => mockToolRegistry,
     } as unknown as Config;
 
@@ -1049,7 +1067,8 @@ describe('CoreToolScheduler request queueing', () => {
       storage: {
         getProjectTempDir: () => '/tmp',
       },
-      getTruncateToolOutput: () => true,
+      getTruncateToolOutputThreshold: () => DEFAULT_TRUNCATE_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_LINES,
     } as unknown as Config;
 
     const testTool = new TestApprovalTool(mockConfig);
@@ -1171,6 +1190,8 @@ describe('CoreToolScheduler request queueing', () => {
 
 describe('truncateAndSaveToFile', () => {
   const mockWriteFile = vi.mocked(fs.writeFile);
+  const THRESHOLD = 40_000;
+  const TRUNCATE_LINES = 1000;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1181,7 +1202,13 @@ describe('truncateAndSaveToFile', () => {
     const callId = 'test-call-id';
     const projectTempDir = '/tmp';
 
-    const result = await truncateAndSaveToFile(content, callId, projectTempDir);
+    const result = await truncateAndSaveToFile(
+      content,
+      callId,
+      projectTempDir,
+      THRESHOLD,
+      TRUNCATE_LINES,
+    );
 
     expect(result).toEqual({ content });
     expect(mockWriteFile).not.toHaveBeenCalled();
@@ -1189,14 +1216,20 @@ describe('truncateAndSaveToFile', () => {
 
   it('should truncate content by lines when content has many lines', async () => {
     // Create content that exceeds 100,000 character threshold with many lines
-    const lines = Array(2000).fill('x'.repeat(1000)); // 100 chars per line * 2000 lines = 2,000,000 chars
+    const lines = Array(2000).fill('x'.repeat(1000)); // 1000 chars per line * 2000 lines = 2,000,000 chars
     const content = lines.join('\n');
     const callId = 'test-call-id';
     const projectTempDir = '/tmp';
 
     mockWriteFile.mockResolvedValue(undefined);
 
-    const result = await truncateAndSaveToFile(content, callId, projectTempDir);
+    const result = await truncateAndSaveToFile(
+      content,
+      callId,
+      projectTempDir,
+      THRESHOLD,
+      TRUNCATE_LINES,
+    );
 
     expect(result.outputFile).toBe(path.join(projectTempDir, `${callId}.txt`));
     expect(mockWriteFile).toHaveBeenCalledWith(
@@ -1205,7 +1238,7 @@ describe('truncateAndSaveToFile', () => {
     );
 
     // Should contain last 1000 lines
-    const expectedTruncated = lines.slice(-1000).join('\n');
+    const expectedTruncated = lines.slice(-TRUNCATE_LINES).join('\n');
     expect(result.content).toContain(
       'Tool output was too large and has been truncated',
     );
@@ -1220,7 +1253,13 @@ describe('truncateAndSaveToFile', () => {
 
     mockWriteFile.mockResolvedValue(undefined);
 
-    const result = await truncateAndSaveToFile(content, callId, projectTempDir);
+    const result = await truncateAndSaveToFile(
+      content,
+      callId,
+      projectTempDir,
+      THRESHOLD,
+      TRUNCATE_LINES,
+    );
 
     expect(result.outputFile).toBe(path.join(projectTempDir, `${callId}.txt`));
     expect(mockWriteFile).toHaveBeenCalledWith(
@@ -1228,9 +1267,8 @@ describe('truncateAndSaveToFile', () => {
       content,
     );
 
-    // Should contain last 80000 characters (1000 * 80)
-    const maxChars = 1000 * 80;
-    const expectedTruncated = content.slice(-maxChars);
+    // Should contain last THRESHOLD characters
+    const expectedTruncated = content.slice(-THRESHOLD);
     expect(result.content).toContain(
       'Tool output was too large and has been truncated',
     );
@@ -1244,7 +1282,13 @@ describe('truncateAndSaveToFile', () => {
 
     mockWriteFile.mockRejectedValue(new Error('File write failed'));
 
-    const result = await truncateAndSaveToFile(content, callId, projectTempDir);
+    const result = await truncateAndSaveToFile(
+      content,
+      callId,
+      projectTempDir,
+      THRESHOLD,
+      TRUNCATE_LINES,
+    );
 
     expect(result.outputFile).toBeUndefined();
     expect(result.content).toContain(
@@ -1260,7 +1304,13 @@ describe('truncateAndSaveToFile', () => {
 
     mockWriteFile.mockResolvedValue(undefined);
 
-    const result = await truncateAndSaveToFile(content, callId, projectTempDir);
+    const result = await truncateAndSaveToFile(
+      content,
+      callId,
+      projectTempDir,
+      THRESHOLD,
+      TRUNCATE_LINES,
+    );
 
     const expectedPath = path.join(projectTempDir, `${callId}.txt`);
     expect(result.outputFile).toBe(expectedPath);
@@ -1274,7 +1324,13 @@ describe('truncateAndSaveToFile', () => {
 
     mockWriteFile.mockResolvedValue(undefined);
 
-    const result = await truncateAndSaveToFile(content, callId, projectTempDir);
+    const result = await truncateAndSaveToFile(
+      content,
+      callId,
+      projectTempDir,
+      THRESHOLD,
+      TRUNCATE_LINES,
+    );
 
     expect(result.content).toContain(
       'read_file tool with the absolute file path above',
@@ -1295,7 +1351,13 @@ describe('truncateAndSaveToFile', () => {
 
     mockWriteFile.mockResolvedValue(undefined);
 
-    await truncateAndSaveToFile(content, callId, projectTempDir);
+    await truncateAndSaveToFile(
+      content,
+      callId,
+      projectTempDir,
+      THRESHOLD,
+      TRUNCATE_LINES,
+    );
 
     const expectedPath = path.join(projectTempDir, 'passwd.txt');
     expect(mockWriteFile).toHaveBeenCalledWith(expectedPath, content);

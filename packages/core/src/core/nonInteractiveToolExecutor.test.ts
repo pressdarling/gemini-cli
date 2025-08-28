@@ -41,7 +41,11 @@ describe('executeToolCall', () => {
         model: 'test-model',
         authType: 'oauth-personal',
       }),
-      getTruncateToolOutput: () => false,
+      storage: {
+        getProjectTempDir: () => '/tmp',
+      },
+      getTruncateToolOutputThreshold: () => 4_000_000,
+      getTruncateToolOutputLines: () => 1000,
     } as unknown as Config;
 
     abortController = new AbortController();

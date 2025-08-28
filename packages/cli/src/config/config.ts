@@ -568,7 +568,8 @@ export async function loadCliConfig(
     shouldUseNodePtyShell: settings.tools?.usePty,
     skipNextSpeakerCheck: settings.model?.skipNextSpeakerCheck,
     enablePromptCompletion: settings.general?.enablePromptCompletion ?? false,
-    truncateToolOutput: settings.truncateToolOutput,
+    truncateToolOutputThreshold: settings.truncateToolOutputThreshold,
+    truncateToolOutputLines: settings.truncateToolOutputLines,
   });
 }
 

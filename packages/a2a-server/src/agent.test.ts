@@ -87,6 +87,11 @@ vi.mock('./config.js', async () => {
         getUsageStatisticsEnabled: vi.fn().mockReturnValue(false),
         setFlashFallbackHandler: vi.fn(),
         initialize: vi.fn().mockResolvedValue(undefined),
+        storage: {
+          getProjectTempDir: () => '/tmp',
+        },
+        getTruncateToolOutputThreshold: () => 4_000_000,
+        getTruncateToolOutputLines: () => 1000,
       } as unknown as Config;
       return config;
     }),

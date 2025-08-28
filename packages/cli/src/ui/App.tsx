@@ -5,9 +5,22 @@
  */
 
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import type { DOMElement } from 'ink';
-import { Box, measureElement, Static, Text, useStdin, useStdout } from 'ink';
-import { StreamingState, type HistoryItem, MessageType } from './types.js';
+import {
+  Box,
+  type DOMElement,
+  measureElement,
+  Static,
+  Text,
+  useStdin,
+  useStdout,
+} from 'ink';
+import {
+  StreamingState,
+  type HistoryItem,
+  MessageType,
+  ToolCallStatus,
+  type HistoryItemWithoutId,
+} from './types.js';
 import { useTerminalSize } from './hooks/useTerminalSize.js';
 import { useGeminiStream } from './hooks/useGeminiStream.js';
 import { useLoadingIndicator } from './hooks/useLoadingIndicator.js';
@@ -90,6 +103,8 @@ import { SettingsDialog } from './components/SettingsDialog.js';
 import { setUpdateHandler } from '../utils/handleAutoUpdate.js';
 import { appEvents, AppEvent } from '../utils/events.js';
 import { isNarrowWidth } from './utils/isNarrowWidth.js';
+import { useWorkspaceMigration } from './hooks/useWorkspaceMigration.js';
+import { WorkspaceMigrationDialog } from './components/WorkspaceMigrationDialog.js';
 
 const CTRL_EXIT_PROMPT_DURATION_MS = 1000;
 // Maximum number of queued messages to display in UI to prevent performance issues
@@ -102,13 +117,26 @@ interface AppProps {
   version: string;
 }
 
+function isToolExecuting(pendingHistoryItems: HistoryItemWithoutId[]) {
+  return pendingHistoryItems.some((item) => {
+    if (item && item.type === 'tool_group') {
+      return item.tools.some(
+        (tool) => ToolCallStatus.Executing === tool.status,
+      );
+    }
+    return false;
+  });
+}
+
 export const AppWrapper = (props: AppProps) => {
   const kittyProtocolStatus = useKittyKeyboardProtocol();
   return (
     <KeypressProvider
       kittyProtocolEnabled={kittyProtocolStatus.enabled}
       config={props.config}
-      debugKeystrokeLogging={props.settings.merged.debugKeystrokeLogging}
+      debugKeystrokeLogging={
+        props.settings.merged.general?.debugKeystrokeLogging
+      }
     >
       <SessionStatsProvider>
         <VimModeProvider settings={props.settings}>
@@ -135,7 +163,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const shouldShowIdePrompt =
     currentIDE &&
     !config.getIdeMode() &&
-    !settings.merged.hasSeenIdeIntegrationNudge &&
+    !settings.merged.ide?.hasSeenNudge &&
     !idePromptAnswered;
 
   useEffect(() => {
@@ -199,6 +227,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   >();
   const [showEscapePrompt, setShowEscapePrompt] = useState(false);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const {
+    showWorkspaceMigrationDialog,
+    workspaceExtensions,
+    onWorkspaceMigrationDialogOpen,
+    onWorkspaceMigrationDialogClose,
+  } = useWorkspaceMigration(settings);
 
   useEffect(() => {
     const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
@@ -273,16 +307,21 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   } = useAuthCommand(settings, setAuthError, config);
 
   useEffect(() => {
-    if (settings.merged.selectedAuthType && !settings.merged.useExternalAuth) {
-      const error = validateAuthMethod(settings.merged.selectedAuthType);
+    if (
+      settings.merged.security?.auth?.selectedType &&
+      !settings.merged.security?.auth?.useExternal
+    ) {
+      const error = validateAuthMethod(
+        settings.merged.security.auth.selectedType,
+      );
       if (error) {
         setAuthError(error);
         openAuthDialog();
       }
     }
   }, [
-    settings.merged.selectedAuthType,
-    settings.merged.useExternalAuth,
+    settings.merged.security?.auth?.selectedType,
+    settings.merged.security?.auth?.useExternal,
     openAuthDialog,
     setAuthError,
   ]);
@@ -317,14 +356,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     try {
       const { memoryContent, fileCount } = await loadHierarchicalGeminiMemory(
         process.cwd(),
-        settings.merged.loadMemoryFromIncludeDirectories
+        settings.merged.context?.loadMemoryFromIncludeDirectories
           ? config.getWorkspaceContext().getDirectories()
           : [],
         config.getDebugMode(),
         config.getFileService(),
         settings.merged,
         config.getExtensionContextFilePaths(),
-        settings.merged.memoryImportFormat || 'tree', // Use setting or default to 'tree'
+        settings.merged.context?.importFormat || 'tree', // Use setting or default to 'tree'
         config.getFileFilteringOptions(),
       );
 
@@ -482,7 +521,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   }, []);
 
   const getPreferredEditor = useCallback(() => {
-    const editorType = settings.merged.preferredEditor;
+    const editorType = settings.merged.general?.preferredEditor;
     const isValidEditor = isEditorAvailable(editorType);
     if (!isValidEditor) {
       openEditorDialog();
@@ -568,6 +607,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     () => cancelHandlerRef.current(),
   );
 
+  const pendingHistoryItems = useMemo(
+    () => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems],
+    [pendingSlashCommandHistoryItems, pendingGeminiHistoryItems],
+  );
+
   // Message queue for handling input during streaming
   const { messageQueue, addMessage, clearQueue, getQueuedMessagesText } =
     useMessageQueue({
@@ -577,6 +621,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   // Update the cancel handler with message queue support
   cancelHandlerRef.current = useCallback(() => {
+    if (isToolExecuting(pendingHistoryItems)) {
+      buffer.setText(''); // Just clear the prompt
+      return;
+    }
+
     const lastUserMessage = userMessages.at(-1);
     let textToSet = lastUserMessage || '';
 
@@ -590,7 +639,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     if (textToSet) {
       buffer.setText(textToSet);
     }
-  }, [buffer, userMessages, getQueuedMessagesText, clearQueue]);
+  }, [
+    buffer,
+    userMessages,
+    getQueuedMessagesText,
+    clearQueue,
+    pendingHistoryItems,
+  ]);
 
   // Input handling - queue messages for processing
   const handleFinalSubmit = useCallback(
@@ -626,8 +681,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   );
 
   const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);
-  const pendingHistoryItems = [...pendingSlashCommandHistoryItems];
-  pendingHistoryItems.push(...pendingGeminiHistoryItems);
 
   const { elapsedTime, currentLoadingPhrase } =
     useLoadingIndicator(streamingState);
@@ -659,7 +712,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const handleGlobalKeypress = useCallback(
     (key: Key) => {
       // Debug log keystrokes if enabled
-      if (settings.merged.debugKeystrokeLogging) {
+      if (settings.merged.general?.debugKeystrokeLogging) {
         console.log('[DEBUG] Keystroke:', JSON.stringify(key));
       }
 
@@ -726,7 +779,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       handleSlashCommand,
       isAuthenticating,
       cancelOngoingRequest,
-      settings.merged.debugKeystrokeLogging,
+      settings.merged.general?.debugKeystrokeLogging,
     ],
   );
 
@@ -842,12 +895,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const branchName = useGitBranchName(config.getTargetDir());
 
   const contextFileNames = useMemo(() => {
-    const fromSettings = settings.merged.contextFileName;
+    const fromSettings = settings.merged.context?.fileName;
     if (fromSettings) {
       return Array.isArray(fromSettings) ? fromSettings : [fromSettings];
     }
     return getAllGeminiMdFilenames();
-  }, [settings.merged.contextFileName]);
+  }, [settings.merged.context?.fileName]);
 
   const initialPrompt = useMemo(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
@@ -923,10 +976,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           key={staticKey}
           items={[
             <Box flexDirection="column" key="header">
-              {!(settings.merged.hideBanner || config.getScreenReader()) && (
-                <Header version={version} nightly={nightly} />
-              )}
-              {!(settings.merged.hideTips || config.getScreenReader()) && (
+              {!(
+                settings.merged.ui?.hideBanner || config.getScreenReader()
+              ) && <Header version={version} nightly={nightly} />}
+              {!(settings.merged.ui?.hideTips || config.getScreenReader()) && (
                 <Tips config={config} />
               )}
             </Box>,
@@ -984,8 +1037,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               ))}
             </Box>
           )}
-
-          {shouldShowIdePrompt && currentIDE ? (
+          {showWorkspaceMigrationDialog ? (
+            <WorkspaceMigrationDialog
+              workspaceExtensions={workspaceExtensions}
+              onOpen={onWorkspaceMigrationDialogOpen}
+              onClose={onWorkspaceMigrationDialogClose}
+            />
+          ) : shouldShowIdePrompt && currentIDE ? (
             <IdeIntegrationNudge
               ide={currentIDE}
               onComplete={handleIdePromptComplete}
@@ -1134,8 +1192,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                     <Box paddingLeft={2}>
                       <Text dimColor>
                         ... (+
-                        {messageQueue.length -
-                          MAX_DISPLAYED_QUEUED_MESSAGES}{' '}
+                        {messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES}
                         more)
                       </Text>
                     </Box>
@@ -1255,7 +1312,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               )}
             </Box>
           )}
-          {!settings.merged.hideFooter && (
+          {!settings.merged.ui?.hideFooter && (
             <Footer
               model={currentModel}
               targetDir={config.getTargetDir()}
@@ -1267,7 +1324,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               showErrorDetails={showErrorDetails}
               showMemoryUsage={
                 config.getDebugMode() ||
-                settings.merged.showMemoryUsage ||
+                settings.merged.ui?.showMemoryUsage ||
                 false
               }
               promptTokenCount={sessionStats.lastPromptTokenCount}

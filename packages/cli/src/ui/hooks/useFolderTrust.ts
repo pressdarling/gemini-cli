@@ -24,7 +24,10 @@ export const useFolderTrust = (
   const [isRestarting, setIsRestarting] = useState(false);
   const [parentFolder, setParentFolder] = useState<string>('');
 
-  const { folderTrust, folderTrustFeature } = settings.merged;
+  const folderTrust = settings.merged.security?.folderTrust?.enabled;
+  const folderTrustFeature =
+    settings.merged.security?.folderTrust?.featureEnabled;
+
   useEffect(() => {
     const trusted = isWorkspaceTrusted({
       folderTrust,

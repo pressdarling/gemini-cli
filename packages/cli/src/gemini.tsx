@@ -35,6 +35,7 @@ import {
   IdeConnectionEvent,
   IdeConnectionType,
   FatalConfigError,
+  uiTelemetryService,
 } from '@google/gemini-cli-core';
 import { validateAuthMethod } from './config/auth.js';
 import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
@@ -106,6 +107,7 @@ async function relaunchWithAdditionalArgs(additionalArgs: string[]) {
   process.exit(0);
 }
 import { runZedIntegration } from './zed-integration/zedIntegration.js';
+import * as fs from 'node:fs';
 
 export function setupUnhandledRejectionHandler() {
   let unhandledRejectionOccurred = false;
@@ -383,6 +385,12 @@ export async function main() {
   }
 
   await runNonInteractive(nonInteractiveConfig, input, prompt_id);
+
+  if (argv.sessionSummary) {
+    const metrics = uiTelemetryService.getMetrics();
+    fs.writeFileSync(argv.sessionSummary, JSON.stringify(metrics, null, 2));
+  }
+
   process.exit(0);
 }
 

@@ -38,10 +38,6 @@ export async function handleUpdate(args: UpdateArgs) {
     try {
       // TODO(chrstnb): we should list extensions if the requested extension is not installed.
       const updatedExtensionInfo = await updateExtensionByName(args.name);
-      if (!updatedExtensionInfo) {
-        console.log(`Extension "${args.name}" failed to update.`);
-        return;
-      }
       console.log(
         `Extension "${args.name}" successfully updated: ${updatedExtensionInfo.originalVersion} → ${updatedExtensionInfo.updatedVersion}.`,
       );

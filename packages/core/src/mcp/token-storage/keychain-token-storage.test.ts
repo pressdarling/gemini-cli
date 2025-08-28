@@ -190,16 +190,14 @@ describe('KeychainTokenStorage', () => {
 
     describe('setCredentials', () => {
       it('should save credentials to keychain', async () => {
+        vi.useFakeTimers();
         mockKeytar.setPassword.mockResolvedValue(undefined);
         await storage.setCredentials(validCredentials);
         expect(mockKeytar.setPassword).toHaveBeenCalledWith(
           mockServiceName,
           'test-server',
-          expect.any(String),
+          JSON.stringify({...validCredentials, updatedAt: Date.now()})
         );
-        const storedData = JSON.parse(mockKeytar.setPassword.mock.calls[0][2]);
-        expect(storedData.serverName).toBe('test-server');
-        expect(storedData.token.accessToken).toBe('access-token');
       });
     });
 

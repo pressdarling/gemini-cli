@@ -161,7 +161,11 @@ export function isFolderTrustEnabled(settings: Settings): boolean {
   return folderTrustFeature && folderTrustSetting;
 }
 
-export function getWorkspaceTrustFromLocalConfig(): boolean | undefined {
+export function isWorkspaceTrusted(settings: Settings): boolean | undefined {
+  if (!isFolderTrustEnabled(settings)) {
+    return true;
+  }
+
   const folders = loadTrustedFolders();
 
   if (folders.errors.length > 0) {
@@ -173,12 +177,4 @@ export function getWorkspaceTrustFromLocalConfig(): boolean | undefined {
   }
 
   return folders.isPathTrusted(process.cwd());
-}
-
-export function isWorkspaceTrusted(settings: Settings): boolean | undefined {
-  if (!isFolderTrustEnabled(settings)) {
-    return true;
-  }
-
-  return getWorkspaceTrustFromLocalConfig();
 }

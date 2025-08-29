@@ -20,21 +20,11 @@ import { loadCliConfig, parseArguments, type CliArgs } from './config.js';
 import type { Settings } from './settings.js';
 import type { Extension } from './extension.js';
 import * as ServerConfig from '@google/gemini-cli-core';
-import {
-  isWorkspaceTrusted,
-  getWorkspaceTrustFromLocalConfig,
-} from './trustedFolders.js';
+import { isWorkspaceTrusted } from './trustedFolders.js';
 
-vi.mock('./trustedFolders.js', async () => {
-  const trustedFolders = await vi.importActual<
-    typeof import('./trustedFolders.js')
-  >('./trustedFolders.js');
-  return {
-    ...trustedFolders,
-    isWorkspaceTrusted: vi.fn().mockReturnValue(true),
-    getWorkspaceTrustFromLocalConfig: vi.fn().mockReturnValue(undefined),
-  };
-});
+vi.mock('./trustedFolders.js', () => ({
+  isWorkspaceTrusted: vi.fn().mockReturnValue(true), // Default to trusted
+}));
 
 vi.mock('fs', async (importOriginal) => {
   const actualFs = await importOriginal<typeof import('fs')>();
@@ -2080,9 +2070,18 @@ describe('loadCliConfig trustedFolder', () => {
     description,
   } of testCases) {
     it(`should correctly set folderTrust and isTrustedFolder when ${description}`, async () => {
-      (getWorkspaceTrustFromLocalConfig as Mock).mockImplementation(
-        () => isWorkspaceTrustedValue,
-      );
+      (isWorkspaceTrusted as Mock).mockImplementation((settings: Settings) => {
+        const folderTrustFeature =
+          settings.security?.folderTrust?.featureEnabled ?? false;
+        const folderTrustSetting =
+          settings.security?.folderTrust?.enabled ?? true;
+        const folderTrustEnabled = folderTrustFeature && folderTrustSetting;
+
+        if (!folderTrustEnabled) {
+          return true;
+        }
+        return isWorkspaceTrustedValue; // This is the part that comes from the test case
+      });
       const argv = await parseArguments({} as Settings);
       const settings: Settings = {
         security: {

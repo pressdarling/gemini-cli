@@ -202,7 +202,7 @@ export interface ConfigParameters {
   loadMemoryFromIncludeDirectories?: boolean;
   chatCompression?: ChatCompressionSettings;
   interactive?: boolean;
-  folderTrustStateFromFile?: boolean;
+  trustedFolder?: boolean;
   useRipgrep?: boolean;
   shouldUseNodePtyShell?: boolean;
   skipNextSpeakerCheck?: boolean;
@@ -275,7 +275,7 @@ export class Config {
   private readonly loadMemoryFromIncludeDirectories: boolean = false;
   private readonly chatCompression: ChatCompressionSettings | undefined;
   private readonly interactive: boolean;
-  private readonly folderTrustStateFromFile: boolean | undefined;
+  private readonly trustedFolder: boolean | undefined;
   private readonly useRipgrep: boolean;
   private readonly shouldUseNodePtyShell: boolean;
   private readonly skipNextSpeakerCheck: boolean;
@@ -351,7 +351,7 @@ export class Config {
       params.loadMemoryFromIncludeDirectories ?? false;
     this.chatCompression = params.chatCompression;
     this.interactive = params.interactive ?? false;
-    this.folderTrustStateFromFile = params.folderTrustStateFromFile;
+    this.trustedFolder = params.trustedFolder;
     this.useRipgrep = params.useRipgrep ?? false;
     this.shouldUseNodePtyShell = params.shouldUseNodePtyShell ?? false;
     this.skipNextSpeakerCheck = params.skipNextSpeakerCheck ?? false;
@@ -731,8 +731,6 @@ export class Config {
   }
 
   isTrustedFolder(): boolean {
-    if (!this.getFolderTrust()) return true;
-
     // isWorkspaceTrusted in cli/src/config/trustedFolder.js returns undefined
     // when the file based trust value is unavailable, since it is mainly used
     // in the initialization for trust dialogs, etc. Here we return true since
@@ -743,7 +741,7 @@ export class Config {
     // restarts in the more common path. If the user chooses to mark the folder
     // as untrusted, the CLI will restart and we will have the trust value
     // reloaded.
-    return this.folderTrustStateFromFile ?? true;
+    return this.trustedFolder ?? true;
   }
 
   setIdeMode(value: boolean): void {

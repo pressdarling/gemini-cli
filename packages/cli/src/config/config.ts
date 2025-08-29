@@ -40,11 +40,7 @@ import { loadSandboxConfig } from './sandboxConfig.js';
 import { resolvePath } from '../utils/resolvePath.js';
 import { appEvents } from '../utils/events.js';
 
-import {
-  isWorkspaceTrusted,
-  getWorkspaceTrustFromLocalConfig,
-  isFolderTrustEnabled,
-} from './trustedFolders.js';
+import { isWorkspaceTrusted } from './trustedFolders.js';
 
 // Simple console logger for now - replace with actual logger if available
 const logger = {
@@ -339,8 +335,8 @@ export async function loadCliConfig(
 
   const folderTrustFeature =
     settings.security?.folderTrust?.featureEnabled ?? false;
-  const folderTrust = isFolderTrustEnabled(settings);
-  const folderTrustStateFromFile = getWorkspaceTrustFromLocalConfig();
+  const folderTrustSetting = settings.security?.folderTrust?.enabled ?? true;
+  const folderTrust = folderTrustFeature && folderTrustSetting;
   const trustedFolder = isWorkspaceTrusted(settings);
 
   const allExtensions = annotateActiveExtensions(
@@ -568,7 +564,7 @@ export async function loadCliConfig(
     folderTrustFeature,
     folderTrust,
     interactive,
-    folderTrustStateFromFile,
+    trustedFolder,
     useRipgrep: settings.tools?.useRipgrep,
     shouldUseNodePtyShell: settings.tools?.usePty,
     skipNextSpeakerCheck: settings.model?.skipNextSpeakerCheck,

@@ -381,10 +381,8 @@ export async function loadCliConfig(
 
   const ideMode = settings.ide?.enabled ?? false;
 
-  const folderTrustFeature =
-    settings.security?.folderTrust?.featureEnabled ?? false;
   const folderTrustSetting = settings.security?.folderTrust?.enabled ?? true;
-  const folderTrust = folderTrustFeature && folderTrustSetting;
+  const folderTrust = folderTrustSetting;
   const trustedFolder = isWorkspaceTrusted(settings);
 
   const allExtensions = annotateActiveExtensions(
@@ -609,7 +607,6 @@ export async function loadCliConfig(
     summarizeToolOutput: settings.model?.summarizeToolOutput,
     ideMode,
     chatCompression: settings.model?.chatCompression,
-    folderTrustFeature,
     folderTrust,
     interactive,
     trustedFolder,

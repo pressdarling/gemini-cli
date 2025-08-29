@@ -817,7 +817,7 @@ export const SETTINGS_SCHEMA = {
     label: 'Tool Output Truncation Threshold',
     category: 'General',
     requiresRestart: false,
-    default: 4_000_000,
+    default: 40_000,
     description:
       'Truncate tool output if it is larger than this many characters. Set to -1 to disable.',
     showInDialog: true,

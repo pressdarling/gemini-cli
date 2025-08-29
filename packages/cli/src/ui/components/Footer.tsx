@@ -135,16 +135,21 @@ export const Footer: React.FC<FooterProps> = ({
       )}
 
       {/* Right Section: Gemini Label and Console Summary */}
-      {!hideModelInfo && (
-        <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
-          <Text color={theme.text.accent}>
-            {isNarrow ? '' : ' '}
-            {model}{' '}
-            <ContextUsageDisplay
-              promptTokenCount={promptTokenCount}
-              model={model}
-            />
-          </Text>
+      <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
+        {!hideModelInfo && (
+          <Box alignItems="center">
+            <Text color={theme.text.accent}>
+              {isNarrow ? '' : ' '}
+              {model}{' '}
+              <ContextUsageDisplay
+                promptTokenCount={promptTokenCount}
+                model={model}
+              />
+            </Text>
+            {showMemoryUsage && <MemoryUsageDisplay />}
+          </Box>
+        )}
+        <Box alignItems="center">
           {corgiMode && (
             <Text>
               <Text color={theme.ui.symbol}>| </Text>
@@ -161,9 +166,8 @@ export const Footer: React.FC<FooterProps> = ({
               <ConsoleSummaryDisplay errorCount={errorCount} />
             </Box>
           )}
-          {showMemoryUsage && <MemoryUsageDisplay />}
         </Box>
-      )}
+      </Box>
     </Box>
   );
 };

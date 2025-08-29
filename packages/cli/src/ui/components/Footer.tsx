@@ -33,6 +33,9 @@ interface FooterProps {
   nightly: boolean;
   vimMode?: string;
   isTrustedFolder?: boolean;
+  showCWD?: boolean;
+  showSandbox?: boolean;
+  showModel?: boolean;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -49,6 +52,9 @@ export const Footer: React.FC<FooterProps> = ({
   nightly,
   vimMode,
   isTrustedFolder,
+  showCWD = true,
+  showSandbox = true,
+  showModel = true,
 }) => {
   const { columns: terminalWidth } = useTerminalSize();
 
@@ -67,89 +73,95 @@ export const Footer: React.FC<FooterProps> = ({
       flexDirection={isNarrow ? 'column' : 'row'}
       alignItems={isNarrow ? 'flex-start' : 'center'}
     >
-      <Box>
-        {debugMode && <DebugProfiler />}
-        {vimMode && <Text color={theme.text.secondary}>[{vimMode}] </Text>}
-        {nightly ? (
-          <Gradient colors={theme.ui.gradient}>
-            <Text>
+      {showCWD && (
+        <Box>
+          {debugMode && <DebugProfiler />}
+          {vimMode && <Text color={theme.text.secondary}>[{vimMode}] </Text>}
+          {nightly ? (
+            <Gradient colors={theme.ui.gradient}>
+              <Text>
+                {displayPath}
+                {branchName && <Text> ({branchName}*)</Text>}
+              </Text>
+            </Gradient>
+          ) : (
+            <Text color={theme.text.link}>
               {displayPath}
-              {branchName && <Text> ({branchName}*)</Text>}
+              {branchName && (
+                <Text color={theme.text.secondary}> ({branchName}*)</Text>
+              )}
             </Text>
-          </Gradient>
-        ) : (
-          <Text color={theme.text.link}>
-            {displayPath}
-            {branchName && (
-              <Text color={theme.text.secondary}> ({branchName}*)</Text>
-            )}
-          </Text>
-        )}
-        {debugMode && (
-          <Text color={theme.status.error}>
-            {' ' + (debugMessage || '--debug')}
-          </Text>
-        )}
-      </Box>
+          )}
+          {debugMode && (
+            <Text color={theme.status.error}>
+              {' ' + (debugMessage || '--debug')}
+            </Text>
+          )}
+        </Box>
+      )}
 
       {/* Middle Section: Centered Trust/Sandbox Info */}
-      <Box
-        flexGrow={isNarrow ? 0 : 1}
-        alignItems="center"
-        justifyContent={isNarrow ? 'flex-start' : 'center'}
-        display="flex"
-        paddingX={isNarrow ? 0 : 1}
-        paddingTop={isNarrow ? 1 : 0}
-      >
-        {isTrustedFolder === false ? (
-          <Text color={theme.status.warning}>untrusted</Text>
-        ) : process.env['SANDBOX'] &&
-          process.env['SANDBOX'] !== 'sandbox-exec' ? (
-          <Text color="green">
-            {process.env['SANDBOX'].replace(/^gemini-(?:cli-)?/, '')}
-          </Text>
-        ) : process.env['SANDBOX'] === 'sandbox-exec' ? (
-          <Text color={theme.status.warning}>
-            macOS Seatbelt{' '}
-            <Text color={theme.text.secondary}>
-              ({process.env['SEATBELT_PROFILE']})
+      {showSandbox && (
+        <Box
+          flexGrow={isNarrow ? 0 : 1}
+          alignItems="center"
+          justifyContent={isNarrow ? 'flex-start' : 'center'}
+          display="flex"
+          paddingX={isNarrow ? 0 : 1}
+          paddingTop={isNarrow ? 1 : 0}
+        >
+          {isTrustedFolder === false ? (
+            <Text color={theme.status.warning}>untrusted</Text>
+          ) : process.env['SANDBOX'] &&
+            process.env['SANDBOX'] !== 'sandbox-exec' ? (
+            <Text color="green">
+              {process.env['SANDBOX'].replace(/^gemini-(?:cli-)?/, '')}
             </Text>
-          </Text>
-        ) : (
-          <Text color={theme.status.error}>
-            no sandbox <Text color={theme.text.secondary}>(see /docs)</Text>
-          </Text>
-        )}
-      </Box>
+          ) : process.env['SANDBOX'] === 'sandbox-exec' ? (
+            <Text color={theme.status.warning}>
+              macOS Seatbelt{' '}
+              <Text color={theme.text.secondary}>
+                ({process.env['SEATBELT_PROFILE']})
+              </Text>
+            </Text>
+          ) : (
+            <Text color={theme.status.error}>
+              no sandbox <Text color={theme.text.secondary}>(see /docs)</Text>
+            </Text>
+          )}
+        </Box>
+      )}
 
       {/* Right Section: Gemini Label and Console Summary */}
-      <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
-        <Text color={theme.text.accent}>
-          {isNarrow ? '' : ' '}
-          {model}{' '}
-          <ContextUsageDisplay
-            promptTokenCount={promptTokenCount}
-            model={model}
-          />
-        </Text>
-        {corgiMode && (
-          <Text>
-            <Text color={theme.ui.symbol}>| </Text>
-            <Text color={theme.status.error}>▼</Text>
-            <Text color={theme.text.primary}>(´</Text>
-            <Text color={theme.status.error}>ᴥ</Text>
-            <Text color={theme.text.primary}>`)</Text>
-            <Text color={theme.status.error}>▼ </Text>
+      {showModel && (
+        <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
+          <Text color={theme.text.accent}>
+            {isNarrow ? '' : ' '}
+            {model}{' '}
+            <ContextUsageDisplay
+              promptTokenCount={promptTokenCount}
+              model={model}
+            />
           </Text>
-        )}
-        {!showErrorDetails && errorCount > 0 && (
-          <Box>
-            <Text color={theme.ui.symbol}>| </Text>
-            <ConsoleSummaryDisplay errorCount={errorCount} />
-          </Box>
-        )}
-        {showMemoryUsage && <MemoryUsageDisplay />}
-      </Box>
+          {corgiMode && (
+            <Text>
+              <Text color={theme.ui.symbol}>| </Text>
+              <Text color={theme.status.error}>▼</Text>
+              <Text color={theme.text.primary}>(´</Text>
+              <Text color={theme.status.error}>ᴥ</Text>
+              <Text color={theme.text.primary}>`)</Text>
+              <Text color={theme.status.error}>▼ </Text>
+            </Text>
+          )}
+          {!showErrorDetails && errorCount > 0 && (
+            <Box>
+              <Text color={theme.ui.symbol}>| </Text>
+              <ConsoleSummaryDisplay errorCount={errorCount} />
+            </Box>
+          )}
+          {showMemoryUsage && <MemoryUsageDisplay />}
+        </Box>
+      )}
     </Box>
   );
 };

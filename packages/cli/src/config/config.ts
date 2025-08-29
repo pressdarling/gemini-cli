@@ -618,6 +618,7 @@ export async function loadCliConfig(
     skipNextSpeakerCheck: settings.model?.skipNextSpeakerCheck,
     enablePromptCompletion: settings.general?.enablePromptCompletion ?? false,
     eventEmitter: appEvents,
+    footer: settings.ui?.footer,
   });
 }
 

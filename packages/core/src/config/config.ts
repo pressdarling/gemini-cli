@@ -67,6 +67,12 @@ export interface AccessibilitySettings {
   screenReader?: boolean;
 }
 
+export interface FooterSettings {
+  showCWD?: boolean;
+  showSandbox?: boolean;
+  showModel?: boolean;
+}
+
 export interface BugCommandSettings {
   urlTemplate: string;
 }
@@ -209,6 +215,7 @@ export interface ConfigParameters {
   extensionManagement?: boolean;
   enablePromptCompletion?: boolean;
   eventEmitter?: EventEmitter;
+  footer?: FooterSettings;
 }
 
 export class Config {
@@ -281,6 +288,7 @@ export class Config {
   private readonly skipNextSpeakerCheck: boolean;
   private readonly extensionManagement: boolean;
   private readonly enablePromptCompletion: boolean = false;
+  private readonly footer: FooterSettings;
   private initialized: boolean = false;
   readonly storage: Storage;
   private readonly fileExclusions: FileExclusions;
@@ -360,6 +368,7 @@ export class Config {
     this.enablePromptCompletion = params.enablePromptCompletion ?? false;
     this.fileExclusions = new FileExclusions(this);
     this.eventEmitter = params.eventEmitter;
+    this.footer = params.footer ?? {};
 
     if (params.contextFileName) {
       setGeminiMdFilename(params.contextFileName);
@@ -802,6 +811,10 @@ export class Config {
 
   getEnablePromptCompletion(): boolean {
     return this.enablePromptCompletion;
+  }
+
+  getFooter(): FooterSettings {
+    return this.footer;
   }
 
   async getGitService(): Promise<GitService> {

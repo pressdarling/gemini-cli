@@ -134,7 +134,10 @@ describe('IDEServer', () => {
       workspacePath: expectedWorkspacePaths,
       ppid: process.ppid,
     });
-    expect(fs.writeFile).toHaveBeenCalledWith(expectedPortFile, expectedContent);
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expectedPortFile,
+      expectedContent,
+    );
     expect(fs.writeFile).toHaveBeenCalledWith(
       expectedPpidPortFile,
       expectedContent,
@@ -166,7 +169,10 @@ describe('IDEServer', () => {
       workspacePath: '/foo/bar',
       ppid: process.ppid,
     });
-    expect(fs.writeFile).toHaveBeenCalledWith(expectedPortFile, expectedContent);
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expectedPortFile,
+      expectedContent,
+    );
     expect(fs.writeFile).toHaveBeenCalledWith(
       expectedPpidPortFile,
       expectedContent,
@@ -198,7 +204,10 @@ describe('IDEServer', () => {
       workspacePath: '',
       ppid: process.ppid,
     });
-    expect(fs.writeFile).toHaveBeenCalledWith(expectedPortFile, expectedContent);
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expectedPortFile,
+      expectedContent,
+    );
     expect(fs.writeFile).toHaveBeenCalledWith(
       expectedPpidPortFile,
       expectedContent,
@@ -244,7 +253,10 @@ describe('IDEServer', () => {
       workspacePath: expectedWorkspacePaths,
       ppid: process.ppid,
     });
-    expect(fs.writeFile).toHaveBeenCalledWith(expectedPortFile, expectedContent);
+    expect(fs.writeFile).toHaveBeenCalledWith(
+      expectedPortFile,
+      expectedContent,
+    );
     expect(fs.writeFile).toHaveBeenCalledWith(
       expectedPpidPortFile,
       expectedContent,

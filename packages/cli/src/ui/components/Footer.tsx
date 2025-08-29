@@ -66,9 +66,11 @@ export const Footer: React.FC<FooterProps> = ({
     ? path.basename(tildeifyPath(targetDir))
     : shortenPath(tildeifyPath(targetDir), pathLength);
 
+  const justifyContent = hideCWD && hideModelInfo ? 'center' : 'space-between';
+
   return (
     <Box
-      justifyContent="space-between"
+      justifyContent={justifyContent}
       width="100%"
       flexDirection={isNarrow ? 'column' : 'row'}
       alignItems={isNarrow ? 'flex-start' : 'center'}
@@ -103,9 +105,9 @@ export const Footer: React.FC<FooterProps> = ({
       {/* Middle Section: Centered Trust/Sandbox Info */}
       {!hideSandboxStatus && (
         <Box
-          flexGrow={isNarrow ? 0 : 1}
+          flexGrow={isNarrow || hideCWD || hideModelInfo ? 0 : 1}
           alignItems="center"
-          justifyContent={isNarrow ? 'flex-start' : 'center'}
+          justifyContent={isNarrow || hideCWD ? 'flex-start' : 'center'}
           display="flex"
           paddingX={isNarrow ? 0 : 1}
           paddingTop={isNarrow ? 1 : 0}

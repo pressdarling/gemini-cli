@@ -11,6 +11,7 @@ import type { RadioSelectItem } from './shared/RadioButtonSelect.js';
 import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
 import { useKeypress } from '../hooks/useKeypress.js';
 import * as process from 'node:process';
+import * as path from 'node:path';
 
 export enum FolderTrustChoice {
   TRUST_FOLDER = 'trust_folder',
@@ -21,13 +22,11 @@ export enum FolderTrustChoice {
 interface FolderTrustDialogProps {
   onSelect: (choice: FolderTrustChoice) => void;
   isRestarting?: boolean;
-  parentFolder?: string;
 }
 
 export const FolderTrustDialog: React.FC<FolderTrustDialogProps> = ({
   onSelect,
   isRestarting,
-  parentFolder,
 }) => {
   useKeypress(
     (key) => {
@@ -46,6 +45,8 @@ export const FolderTrustDialog: React.FC<FolderTrustDialogProps> = ({
     },
     { isActive: !!isRestarting },
   );
+
+  const parentFolder = path.basename(path.dirname(process.cwd()));
 
   const options: Array<RadioSelectItem<FolderTrustChoice>> = [
     {

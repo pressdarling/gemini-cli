@@ -48,7 +48,7 @@ function writePortAndWorkspace(
   return fs
     .writeFile(
       portFile,
-      JSON.stringify({ port, workspacePath, pid: process.pid }),
+      JSON.stringify({ port, workspacePath, ppid: process.ppid }),
     )
     .catch((err) => {
       const message = err instanceof Error ? err.message : String(err);

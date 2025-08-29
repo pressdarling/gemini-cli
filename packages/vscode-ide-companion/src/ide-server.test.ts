@@ -130,7 +130,7 @@ describe('IDEServer', () => {
       JSON.stringify({
         port: parseInt(port, 10),
         workspacePath: expectedWorkspacePaths,
-        pid: process.pid,
+        pid: process.ppid,
       }),
     );
   });
@@ -156,7 +156,7 @@ describe('IDEServer', () => {
       JSON.stringify({
         port: parseInt(port, 10),
         workspacePath: '/foo/bar',
-        pid: process.pid,
+        pid: process.ppid,
       }),
     );
   });
@@ -182,7 +182,7 @@ describe('IDEServer', () => {
       JSON.stringify({
         port: parseInt(port, 10),
         workspacePath: '',
-        pid: process.pid,
+        pid: process.ppid,
       }),
     );
   });
@@ -222,7 +222,7 @@ describe('IDEServer', () => {
       JSON.stringify({
         port: parseInt(port, 10),
         workspacePath: expectedWorkspacePaths,
-        pid: process.pid,
+        pid: process.ppid,
       }),
     );
 
@@ -239,7 +239,7 @@ describe('IDEServer', () => {
       JSON.stringify({
         port: parseInt(port, 10),
         workspacePath: '/baz/qux',
-        pid: process.pid,
+        pid: process.ppid,
       }),
     );
   });
@@ -284,7 +284,7 @@ describe('IDEServer', () => {
         JSON.stringify({
           port: parseInt(port, 10),
           workspacePath: expectedWorkspacePaths,
-          pid: process.pid,
+          pid: process.ppid,
         }),
       );
     },

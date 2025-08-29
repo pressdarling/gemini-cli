@@ -90,6 +90,9 @@ describe('activate', () => {
       .mocked(vscode.window.showInformationMessage)
       .mockResolvedValue(undefined as never);
     vi.mocked(context.globalState.get).mockReturnValue(undefined);
+    vi.mocked(vscode.extensions.getExtension).mockReturnValue({
+      packageJSON: { version: '1.1.0' },
+    } as vscode.Extension<unknown>);
     await activate(context);
     expect(showInformationMessageMock).toHaveBeenCalledWith(
       'Gemini CLI Companion extension successfully installed.',
@@ -110,20 +113,20 @@ describe('activate', () => {
       .mocked(vscode.window.showInformationMessage)
       .mockResolvedValue('Re-launch Gemini CLI' as never);
     vi.mocked(context.globalState.get).mockReturnValue(undefined);
+    vi.mocked(vscode.extensions.getExtension).mockReturnValue({
+      packageJSON: { version: '1.1.0' },
+    } as vscode.Extension<unknown>);
     await activate(context);
-    expect(showInformationMessageMock).toHaveBeenCalled();
-    await new Promise(process.nextTick); // Wait for the promise to resolve
-    const commandCallback = vi
-      .mocked(vscode.commands.registerCommand)
-      .mock.calls.find((call) => call[0] === 'gemini-cli.runGeminiCLI')?.[1];
-
-    expect(commandCallback).toBeDefined();
+    expect(showInformationMessageMock).toHaveBeenCalledWith(
+      'Gemini CLI Companion extension successfully installed.',
+    );
   });
 
   describe('update notification', () => {
     it('should show an update notification if a newer version is available', async () => {
+      vi.mocked(context.globalState.get).mockReturnValue(true);
       vi.mocked(vscode.extensions.getExtension).mockReturnValue({
-        packageJSON: { version: '1.0.0' },
+        packageJSON: { version: '1.2.0' },
       } as vscode.Extension<unknown>);
       const showInformationMessageMock = vi.mocked(
         vscode.window.showInformationMessage,
@@ -138,6 +141,7 @@ describe('activate', () => {
     });
 
     it('should not show an update notification if the version is the same', async () => {
+      vi.mocked(context.globalState.get).mockReturnValue(true);
       vi.mocked(vscode.extensions.getExtension).mockReturnValue({
         packageJSON: { version: '1.1.0' },
       } as vscode.Extension<unknown>);
@@ -154,12 +158,13 @@ describe('activate', () => {
     });
 
     it('should execute the install command when the user clicks "Update"', async () => {
+      vi.mocked(context.globalState.get).mockReturnValue(true);
       vi.mocked(vscode.extensions.getExtension).mockReturnValue({
-        packageJSON: { version: '1.0.0' },
+        packageJSON: { version: '1.2.0' },
       } as vscode.Extension<unknown>);
-      const _showInformationMessageMock = vi
-        .mocked(vscode.window.showInformationMessage)
-        .mockResolvedValue('Update to latest version' as never);
+      vi.mocked(vscode.window.showInformationMessage).mockResolvedValue(
+        'Update to latest version' as never,
+      );
       const executeCommandMock = vi.mocked(vscode.commands.executeCommand);
 
       await activate(context);

@@ -6,6 +6,7 @@
 
 import * as vscode from 'vscode';
 import { IDEServer } from './ide-server.js';
+import semver from 'semver';
 import { DiffContentProvider, DiffManager } from './diff-manager.js';
 import { createLogger } from './utils/logger.js';
 
@@ -27,7 +28,7 @@ export async function activate(context: vscode.ExtensionContext) {
   const latestVersion = vscode.extensions.getExtension(
     CLI_IDE_COMPANION_IDENTIFIER,
   )?.packageJSON.version;
-  if (version !== latestVersion) {
+  if (semver.gt(latestVersion, version)) {
     vscode.window
       .showInformationMessage(
         'A new version of the Gemini CLI extension has been released',

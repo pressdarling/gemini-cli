@@ -78,6 +78,7 @@ export interface CliArgs {
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
   screenReader: boolean | undefined;
+  useSmartEdit: boolean | undefined;
   sessionSummary: string | undefined;
 }
 
@@ -626,6 +627,7 @@ export async function loadCliConfig(
       hideSandboxStatus: settings.ui?.hideSandboxStatus,
       hideModelInfo: settings.ui?.hideModelInfo,
     },
+    useSmartEdit: argv.useSmartEdit ?? settings.useSmartEdit,
   });
 }
 

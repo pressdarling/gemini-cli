@@ -20,6 +20,7 @@ import type {
   ToolCallConfirmationDetails,
   ToolResult,
   ToolInvocation,
+  Storage,
 } from '@google/gemini-cli-core';
 import { expect, vi } from 'vitest';
 
@@ -39,6 +40,11 @@ export function createMockConfig(
       isPathWithinWorkspace: () => true,
     }),
     getTargetDir: () => '/test',
+    storage: {
+      getProjectTempDir: () => '/tmp',
+    } as Storage,
+    getTruncateToolOutputThreshold: () => 4_000_000,
+    getTruncateToolOutputLines: () => 1000,
     getGeminiClient: vi.fn(),
     getDebugMode: vi.fn().mockReturnValue(false),
     getContentGeneratorConfig: vi.fn().mockReturnValue({ model: 'gemini-pro' }),

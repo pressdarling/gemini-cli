@@ -683,9 +683,10 @@ describe('App UI', () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).not.toContain(
-      'Using: 1 open file (ctrl+g to view) | 1 GEMINI.md file',
-    );
+    const output = lastFrame();
+    expect(output).not.toContain('Using:');
+    expect(output).not.toContain('open file');
+    expect(output).not.toContain('GEMINI.md file');
   });
 
   it('should display default "GEMINI.md" in footer when contextFileName is not set and count is 1', async () => {

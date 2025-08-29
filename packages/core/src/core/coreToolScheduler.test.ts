@@ -1231,9 +1231,11 @@ describe('truncateAndSaveToFile', () => {
       TRUNCATE_LINES,
     );
 
-    expect(result.outputFile).toBe(path.join(projectTempDir, `${callId}.txt`));
+    expect(result.outputFile).toBe(
+      path.join(projectTempDir, `${callId}.output`),
+    );
     expect(mockWriteFile).toHaveBeenCalledWith(
-      path.join(projectTempDir, `${callId}.txt`),
+      path.join(projectTempDir, `${callId}.output`),
       content,
     );
 
@@ -1261,9 +1263,11 @@ describe('truncateAndSaveToFile', () => {
       TRUNCATE_LINES,
     );
 
-    expect(result.outputFile).toBe(path.join(projectTempDir, `${callId}.txt`));
+    expect(result.outputFile).toBe(
+      path.join(projectTempDir, `${callId}.output`),
+    );
     expect(mockWriteFile).toHaveBeenCalledWith(
-      path.join(projectTempDir, `${callId}.txt`),
+      path.join(projectTempDir, `${callId}.output`),
       content,
     );
 
@@ -1312,7 +1316,7 @@ describe('truncateAndSaveToFile', () => {
       TRUNCATE_LINES,
     );
 
-    const expectedPath = path.join(projectTempDir, `${callId}.txt`);
+    const expectedPath = path.join(projectTempDir, `${callId}.output`);
     expect(result.outputFile).toBe(expectedPath);
     expect(mockWriteFile).toHaveBeenCalledWith(expectedPath, content);
   });
@@ -1359,7 +1363,7 @@ describe('truncateAndSaveToFile', () => {
       TRUNCATE_LINES,
     );
 
-    const expectedPath = path.join(projectTempDir, 'passwd.txt');
+    const expectedPath = path.join(projectTempDir, 'passwd.output');
     expect(mockWriteFile).toHaveBeenCalledWith(expectedPath, content);
   });
 });

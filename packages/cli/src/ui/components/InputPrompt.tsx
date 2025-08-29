@@ -23,10 +23,7 @@ import { useKeypress } from '../hooks/useKeypress.js';
 import { keyMatchers, Command } from '../keyMatchers.js';
 import type { CommandContext, SlashCommand } from '../commands/types.js';
 import type { Config } from '@google/gemini-cli-core';
-import {
-  parseInputForHighlighting,
-  type HighlightToken,
-} from '../utils/highlight.js';
+import { parseInputForHighlighting } from '../utils/highlight.js';
 import {
   clipboardHasImage,
   saveClipboardImage,
@@ -727,58 +724,53 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                 const isOnCursorLine =
                   focus && visualIdxInRenderedSet === cursorVisualRow;
 
+                const renderedLine: React.ReactNode[] = [];
                 let charCount = 0;
 
-                const renderTokens = (
-                  tokens: readonly HighlightToken[],
-                  isCursorLine: boolean,
-                ) =>
-                  tokens.map((token, tokenIdx) => {
-                    let display = token.text;
-                    if (isCursorLine) {
-                      const relativeVisualColForHighlight =
-                        cursorVisualColAbsolute;
-                      const tokenStart = charCount;
-                      const tokenEnd = tokenStart + cpLen(token.text);
+                tokens.forEach((token, tokenIdx) => {
+                  let display = token.text;
+                  if (isOnCursorLine) {
+                    const relativeVisualColForHighlight =
+                      cursorVisualColAbsolute;
+                    const tokenStart = charCount;
+                    const tokenEnd = tokenStart + cpLen(token.text);
 
-                      if (
-                        relativeVisualColForHighlight >= tokenStart &&
-                        relativeVisualColForHighlight < tokenEnd
-                      ) {
-                        const charToHighlight = cpSlice(
+                    if (
+                      relativeVisualColForHighlight >= tokenStart &&
+                      relativeVisualColForHighlight < tokenEnd
+                    ) {
+                      const charToHighlight = cpSlice(
+                        token.text,
+                        relativeVisualColForHighlight - tokenStart,
+                        relativeVisualColForHighlight - tokenStart + 1,
+                      );
+                      const highlighted = chalk.inverse(charToHighlight);
+                      display =
+                        cpSlice(
                           token.text,
+                          0,
                           relativeVisualColForHighlight - tokenStart,
+                        ) +
+                        highlighted +
+                        cpSlice(
+                          token.text,
                           relativeVisualColForHighlight - tokenStart + 1,
                         );
-                        const highlighted = chalk.inverse(charToHighlight);
-                        display =
-                          cpSlice(
-                            token.text,
-                            0,
-                            relativeVisualColForHighlight - tokenStart,
-                          ) +
-                          highlighted +
-                          cpSlice(
-                            token.text,
-                            relativeVisualColForHighlight - tokenStart + 1,
-                          );
-                      }
-                      charCount = tokenEnd;
                     }
+                    charCount = tokenEnd;
+                  }
 
-                    const color =
-                      token.type === 'command' || token.type === 'file'
-                        ? theme.text.accent
-                        : undefined;
+                  const color =
+                    token.type === 'command' || token.type === 'file'
+                      ? theme.text.accent
+                      : undefined;
 
-                    return (
-                      <Text key={`token-${tokenIdx}`} color={color}>
-                        {display}
-                      </Text>
-                    );
-                  });
-
-                const renderedLine = renderTokens(tokens, isOnCursorLine);
+                  renderedLine.push(
+                    <Text key={`token-${tokenIdx}`} color={color}>
+                      {display}
+                    </Text>,
+                  );
+                });
                 const currentLineGhost = isOnCursorLine ? inlineGhost : '';
 
                 if (

@@ -19,25 +19,30 @@ let logger: vscode.OutputChannel;
 
 let log: (message: string) => void = () => {};
 
-async function checkForUpdates(context: vscode.ExtensionContext, log: (message: string) => void) {
+async function checkForUpdates(
+  context: vscode.ExtensionContext,
+  log: (message: string) => void,
+) {
   try {
     const currentVersion = context.extension.packageJSON.version;
-    
+
     // Fetch package.json from the main branch of the repository.
     // This is a simple way to get the latest version.
-    const response = await fetch('https://raw.githubusercontent.com/google-gemini/gemini-cli/main/packages/vscode-ide-companion/package.json');
+    const response = await fetch(
+      'https://raw.githubusercontent.com/google-gemini/gemini-cli/main/packages/vscode-ide-companion/package.json',
+    );
     if (!response.ok) {
       log(`Failed to fetch latest version info: ${response.statusText}`);
       return;
     }
-    
+
     const packageJson = await response.json();
     const latestVersion = packageJson.version;
 
     if (latestVersion && semver.gt(latestVersion, currentVersion)) {
       const selection = await vscode.window.showInformationMessage(
         `A new version (${latestVersion}) of the Gemini CLI Companion extension is available.`,
-        'Update to latest version'
+        'Update to latest version',
       );
       if (selection === 'Update to latest version') {
         // The install command will update the extension if a newer version is found.

@@ -202,6 +202,45 @@ export const SETTINGS_SCHEMA = {
           'Hide the context summary (GEMINI.md, MCP servers) above the input.',
         showInDialog: true,
       },
+      footer: {
+        type: 'object',
+        label: 'Footer',
+        category: 'UI',
+        requiresRestart: false,
+        default: {},
+        description: 'Settings for the footer.',
+        showInDialog: false,
+        properties: {
+          hideCWD: {
+            type: 'boolean',
+            label: 'Hide CWD',
+            category: 'UI',
+            requiresRestart: false,
+            default: false,
+            description:
+              'Hide the current working directory path in the footer.',
+            showInDialog: true,
+          },
+          hideSandboxStatus: {
+            type: 'boolean',
+            label: 'Hide Sandbox Status',
+            category: 'UI',
+            requiresRestart: false,
+            default: false,
+            description: 'Hide the sandbox status indicator in the footer.',
+            showInDialog: true,
+          },
+          hideModelInfo: {
+            type: 'boolean',
+            label: 'Hide Model Info',
+            category: 'UI',
+            requiresRestart: false,
+            default: false,
+            description: 'Hide the model name and context usage in the footer.',
+            showInDialog: true,
+          },
+        },
+      },
       hideFooter: {
         type: 'boolean',
         label: 'Hide Footer',
@@ -209,33 +248,6 @@ export const SETTINGS_SCHEMA = {
         requiresRestart: false,
         default: false,
         description: 'Hide the footer from the UI',
-        showInDialog: true,
-      },
-      hideCWD: {
-        type: 'boolean',
-        label: 'Hide CWD',
-        category: 'UI',
-        requiresRestart: false,
-        default: false,
-        description: 'Hide the current working directory path in the footer.',
-        showInDialog: true,
-      },
-      hideSandboxStatus: {
-        type: 'boolean',
-        label: 'Hide Sandbox Status',
-        category: 'UI',
-        requiresRestart: false,
-        default: false,
-        description: 'Hide the sandbox status indicator in the footer.',
-        showInDialog: true,
-      },
-      hideModelInfo: {
-        type: 'boolean',
-        label: 'Hide Model Info',
-        category: 'UI',
-        requiresRestart: false,
-        default: false,
-        description: 'Hide the model name and context usage in the footer.',
         showInDialog: true,
       },
       showMemoryUsage: {
@@ -839,3 +851,9 @@ type InferSettings<T extends SettingsSchema> = {
 };
 
 export type Settings = InferSettings<typeof SETTINGS_SCHEMA>;
+
+export interface FooterSettings {
+  hideCWD?: boolean;
+  hideSandboxStatus?: boolean;
+  hideModelInfo?: boolean;
+}

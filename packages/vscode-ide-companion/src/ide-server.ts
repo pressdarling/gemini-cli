@@ -46,7 +46,10 @@ function writePortAndWorkspace(
 
   log(`Writing port file to: ${portFile}`);
   return fs
-    .writeFile(portFile, JSON.stringify({ port, workspacePath }))
+    .writeFile(
+      portFile,
+      JSON.stringify({ port, workspacePath, pid: process.pid }),
+    )
     .catch((err) => {
       const message = err instanceof Error ? err.message : String(err);
       log(`Failed to write port to file: ${message}`);

@@ -8,7 +8,7 @@ import type {
   MCPServerConfig,
   GeminiCLIExtension,
 } from '@google/gemini-cli-core';
-import { Storage } from '@google/gemini-cli-core';
+import { GEMINI_DIR, Storage } from '@google/gemini-cli-core';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -16,8 +16,10 @@ import { simpleGit } from 'simple-git';
 import { SettingScope, loadSettings } from '../config/settings.js';
 import { getErrorMessage } from '../utils/errors.js';
 import { recursivelyHydrateStrings } from './extensions/variables.js';
+import { isWorkspaceTrusted } from './trustedFolders.js';
+import { resolveEnvVarsInObject } from '../utils/envVarResolver.js';
 
-export const EXTENSIONS_DIRECTORY_NAME = '.gemini/extensions';
+export const EXTENSIONS_DIRECTORY_NAME = path.join(GEMINI_DIR, 'extensions');
 
 export const EXTENSIONS_CONFIG_FILENAME = 'gemini-extension.json';
 export const INSTALL_METADATA_FILENAME = '.gemini-extension-install.json';
@@ -43,6 +45,7 @@ export interface ExtensionInstallMetadata {
 }
 
 export interface ExtensionUpdateInfo {
+  name: string;
   originalVersion: string;
   updatedVersion: string;
 }
@@ -77,15 +80,54 @@ export class ExtensionStorage {
   }
 }
 
+export function getWorkspaceExtensions(workspaceDir: string): Extension[] {
+  return loadExtensionsFromDir(workspaceDir);
+}
+
+async function copyExtension(
+  source: string,
+  destination: string,
+): Promise<void> {
+  await fs.promises.cp(source, destination, { recursive: true });
+}
+
+export async function performWorkspaceExtensionMigration(
+  extensions: Extension[],
+): Promise<string[]> {
+  const failedInstallNames: string[] = [];
+
+  for (const extension of extensions) {
+    try {
+      const installMetadata: ExtensionInstallMetadata = {
+        source: extension.path,
+        type: 'local',
+      };
+      await installExtension(installMetadata);
+    } catch (_) {
+      failedInstallNames.push(extension.config.name);
+    }
+  }
+  return failedInstallNames;
+}
+
 export function loadExtensions(workspaceDir: string): Extension[] {
-  const allExtensions = [
-    ...loadExtensionsFromDir(workspaceDir),
-    ...loadExtensionsFromDir(os.homedir()),
-  ];
+  const settings = loadSettings(workspaceDir).merged;
+  const disabledExtensions = settings.extensions?.disabled ?? [];
+  const allExtensions = [...loadUserExtensions()];
+
+  if (
+    (isWorkspaceTrusted(settings) ?? true) &&
+    !settings.experimental?.extensionManagement
+  ) {
+    allExtensions.push(...getWorkspaceExtensions(workspaceDir));
+  }
 
   const uniqueExtensions = new Map<string, Extension>();
   for (const extension of allExtensions) {
-    if (!uniqueExtensions.has(extension.config.name)) {
+    if (
+      !uniqueExtensions.has(extension.config.name) &&
+      !disabledExtensions.includes(extension.config.name)
+    ) {
       uniqueExtensions.set(extension.config.name, extension);
     }
   }
@@ -143,7 +185,7 @@ export function loadExtension(extensionDir: string): Extension | null {
 
   try {
     const configContent = fs.readFileSync(configFilePath, 'utf-8');
-    const config = recursivelyHydrateStrings(JSON.parse(configContent), {
+    let config = recursivelyHydrateStrings(JSON.parse(configContent), {
       extensionPath: extensionDir,
       '/': path.sep,
       pathSeparator: path.sep,
@@ -154,6 +196,8 @@ export function loadExtension(extensionDir: string): Extension | null {
       );
       return null;
     }
+
+    config = resolveEnvVarsInObject(config);
 
     const contextFiles = getContextFileNames(config)
       .map((contextFileName) => path.join(extensionDir, contextFileName))
@@ -283,22 +327,17 @@ async function cloneFromGit(
   }
 }
 
-/**
- * Copies an extension from a source to a destination path.
- * @param source The source path of the extension.
- * @param destination The destination path to copy the extension to.
- */
-async function copyExtension(
-  source: string,
-  destination: string,
-): Promise<void> {
-  await fs.promises.cp(source, destination, { recursive: true });
-}
-
 export async function installExtension(
   installMetadata: ExtensionInstallMetadata,
   cwd: string = process.cwd(),
 ): Promise<string> {
+  const settings = loadSettings(cwd).merged;
+  if (!isWorkspaceTrusted(settings)) {
+    throw new Error(
+      `Could not install extension from untrusted folder at ${installMetadata.source}`,
+    );
+  }
+
   const extensionsDir = ExtensionStorage.getUserExtensionsDir();
   await fs.promises.mkdir(extensionsDir, { recursive: true });
 
@@ -409,10 +448,10 @@ export function toOutputString(extension: Extension): string {
   return output;
 }
 
-export async function updateExtension(
+export async function updateExtensionByName(
   extensionName: string,
   cwd: string = process.cwd(),
-): Promise<ExtensionUpdateInfo | undefined> {
+): Promise<ExtensionUpdateInfo> {
   const installedExtensions = loadUserExtensions();
   const extension = installedExtensions.find(
     (installed) => installed.config.name === extensionName,
@@ -422,16 +461,21 @@ export async function updateExtension(
       `Extension "${extensionName}" not found. Run gemini extensions list to see available extensions.`,
     );
   }
+  return await updateExtension(extension, cwd);
+}
+
+export async function updateExtension(
+  extension: Extension,
+  cwd: string = process.cwd(),
+): Promise<ExtensionUpdateInfo> {
   if (!extension.installMetadata) {
-    throw new Error(
-      `Extension cannot be updated because it is missing the .gemini-extension.install.json file. To update manually, uninstall and then reinstall the updated version.`,
-    );
+    throw new Error(`Extension ${extension.config.name} cannot be updated.`);
   }
   const originalVersion = extension.config.version;
   const tempDir = await ExtensionStorage.createTmpDir();
   try {
     await copyExtension(extension.path, tempDir);
-    await uninstallExtension(extensionName, cwd);
+    await uninstallExtension(extension.config.name, cwd);
     await installExtension(extension.installMetadata, cwd);
 
     const updatedExtension = loadExtension(extension.path);
@@ -440,6 +484,7 @@ export async function updateExtension(
     }
     const updatedVersion = updatedExtension.config.version;
     return {
+      name: extension.config.name,
       originalVersion,
       updatedVersion,
     };
@@ -501,4 +546,15 @@ function removeFromDisabledExtensions(
     );
     settings.setValue(scope, 'extensions', extensionSettings);
   }
+}
+
+export async function updateAllUpdatableExtensions(
+  cwd: string = process.cwd(),
+): Promise<ExtensionUpdateInfo[]> {
+  const extensions = loadExtensions(cwd).filter(
+    (extension) => !!extension.installMetadata,
+  );
+  return await Promise.all(
+    extensions.map((extension) => updateExtension(extension, cwd)),
+  );
 }

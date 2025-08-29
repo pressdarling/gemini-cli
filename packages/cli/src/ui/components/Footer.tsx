@@ -33,9 +33,9 @@ interface FooterProps {
   nightly: boolean;
   vimMode?: string;
   isTrustedFolder?: boolean;
-  showCWD?: boolean;
-  showSandbox?: boolean;
-  showModel?: boolean;
+  hideCWD?: boolean;
+  hideSandboxStatus?: boolean;
+  hideModelInfo?: boolean;
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -52,9 +52,9 @@ export const Footer: React.FC<FooterProps> = ({
   nightly,
   vimMode,
   isTrustedFolder,
-  showCWD = true,
-  showSandbox = true,
-  showModel = true,
+  hideCWD = false,
+  hideSandboxStatus = false,
+  hideModelInfo = false,
 }) => {
   const { columns: terminalWidth } = useTerminalSize();
 
@@ -73,7 +73,7 @@ export const Footer: React.FC<FooterProps> = ({
       flexDirection={isNarrow ? 'column' : 'row'}
       alignItems={isNarrow ? 'flex-start' : 'center'}
     >
-      {showCWD && (
+      {!hideCWD && (
         <Box>
           {debugMode && <DebugProfiler />}
           {vimMode && <Text color={theme.text.secondary}>[{vimMode}] </Text>}
@@ -101,7 +101,7 @@ export const Footer: React.FC<FooterProps> = ({
       )}
 
       {/* Middle Section: Centered Trust/Sandbox Info */}
-      {showSandbox && (
+      {!hideSandboxStatus && (
         <Box
           flexGrow={isNarrow ? 0 : 1}
           alignItems="center"
@@ -133,7 +133,7 @@ export const Footer: React.FC<FooterProps> = ({
       )}
 
       {/* Right Section: Gemini Label and Console Summary */}
-      {showModel && (
+      {!hideModelInfo && (
         <Box alignItems="center" paddingTop={isNarrow ? 1 : 0}>
           <Text color={theme.text.accent}>
             {isNarrow ? '' : ' '}

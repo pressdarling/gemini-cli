@@ -68,9 +68,9 @@ export interface AccessibilitySettings {
 }
 
 export interface FooterSettings {
-  showCWD?: boolean;
-  showSandbox?: boolean;
-  showModel?: boolean;
+  hideCWD?: boolean;
+  hideSandboxStatus?: boolean;
+  hideModelInfo?: boolean;
 }
 
 export interface BugCommandSettings {

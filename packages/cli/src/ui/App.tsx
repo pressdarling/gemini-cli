@@ -1292,7 +1292,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                     </Text>
                   ) : showEscapePrompt ? (
                     <Text color={Colors.Gray}>Press Esc again to clear.</Text>
-                  ) : (
+                  ) : !settings.merged.ui?.hideContextSummary ? (
                     <ContextSummaryDisplay
                       ideContext={ideContextState}
                       geminiMdFileCount={geminiMdFileCount}
@@ -1301,7 +1301,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                       blockedMcpServers={config.getBlockedMcpServers()}
                       showToolDescriptions={showToolDescriptions}
                     />
-                  )}
+                  ) : null}
                 </Box>
                 <Box paddingTop={isNarrow ? 1 : 0}>
                   {showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&

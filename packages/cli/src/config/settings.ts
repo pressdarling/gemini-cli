@@ -48,6 +48,7 @@ const MIGRATION_MAP: Record<string, string> = {
   hideCWD: 'ui.hideCWD',
   hideSandboxStatus: 'ui.hideSandboxStatus',
   hideModelInfo: 'ui.hideModelInfo',
+  hideContextSummary: 'ui.hideContextSummary',
   showMemoryUsage: 'ui.showMemoryUsage',
   showLineNumbers: 'ui.showLineNumbers',
   showCitations: 'ui.showCitations',

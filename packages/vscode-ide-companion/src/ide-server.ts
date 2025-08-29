@@ -247,7 +247,7 @@ export class IDEServer {
   }
 
   async updateWorkspacePath(): Promise<void> {
-    if (this.context && this.port && this.portFile) {
+    if (this.context && this.server && this.port && this.portFile) {
       await writePortAndWorkspace(
         this.context,
         this.port,

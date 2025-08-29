@@ -206,7 +206,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const [editorError, setEditorError] = useState<string | null>(null);
   const [footerHeight, setFooterHeight] = useState<number>(0);
   const [corgiMode, setCorgiMode] = useState(false);
-  const [isTrustedFolder, setIsTrustedFolder] = useState(
+  const [isTrustedFolderState, setIsTrustedFolder] = useState(
     isWorkspaceTrusted(settings.merged),
   );
   const [currentModel, setCurrentModel] = useState(config.getModel());
@@ -1409,7 +1409,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               promptTokenCount={sessionStats.lastPromptTokenCount}
               nightly={nightly}
               vimMode={vimModeEnabled ? vimMode : undefined}
-              isTrustedFolder={isTrustedFolder}
+              isTrustedFolder={isTrustedFolderState}
             />
           )}
         </Box>

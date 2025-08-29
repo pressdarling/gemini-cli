@@ -192,6 +192,16 @@ export const SETTINGS_SCHEMA = {
         description: 'Hide the application banner',
         showInDialog: true,
       },
+      hideContextSummary: {
+        type: 'boolean',
+        label: 'Hide Context Summary',
+        category: 'UI',
+        requiresRestart: false,
+        default: false,
+        description:
+          'Hide the context summary (GEMINI.md, MCP servers) above the input.',
+        showInDialog: true,
+      },
       hideFooter: {
         type: 'boolean',
         label: 'Hide Footer',
@@ -226,16 +236,6 @@ export const SETTINGS_SCHEMA = {
         requiresRestart: false,
         default: false,
         description: 'Hide the model name and context usage in the footer.',
-        showInDialog: true,
-      },
-      hideContextSummary: {
-        type: 'boolean',
-        label: 'Hide Context Summary',
-        category: 'UI',
-        requiresRestart: false,
-        default: false,
-        description:
-          'Hide the context summary (GEMINI.md, MCP servers) above the input.',
         showInDialog: true,
       },
       showMemoryUsage: {

@@ -78,6 +78,7 @@ export interface CliArgs {
   proxy: string | undefined;
   includeDirectories: string[] | undefined;
   screenReader: boolean | undefined;
+  useSmartEdit: boolean | undefined;
   sessionSummary: string | undefined;
 }
 
@@ -623,6 +624,7 @@ export async function loadCliConfig(
     truncateToolOutputThreshold: settings.model?.truncateToolOutputThreshold,
     truncateToolOutputLines: settings.model?.truncateToolOutputLines,
     eventEmitter: appEvents,
+    useSmartEdit: argv.useSmartEdit ?? settings.useSmartEdit,
   });
 }
 

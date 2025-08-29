@@ -622,11 +622,6 @@ export async function loadCliConfig(
     skipNextSpeakerCheck: settings.model?.skipNextSpeakerCheck,
     enablePromptCompletion: settings.general?.enablePromptCompletion ?? false,
     eventEmitter: appEvents,
-    footer: {
-      hideCWD: settings.ui?.hideCWD,
-      hideSandboxStatus: settings.ui?.hideSandboxStatus,
-      hideModelInfo: settings.ui?.hideModelInfo,
-    },
     useSmartEdit: argv.useSmartEdit ?? settings.useSmartEdit,
   });
 }

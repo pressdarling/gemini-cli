@@ -25,7 +25,7 @@ describe('FolderTrustDialog', () => {
 
   it('should render the dialog with title and description', () => {
     const { lastFrame } = renderWithProviders(
-      <FolderTrustDialog onSelect={vi.fn()} parentFolder="parent" />,
+      <FolderTrustDialog onSelect={vi.fn()} />,
     );
 
     expect(lastFrame()).toContain('Do you trust this folder?');
@@ -37,11 +37,7 @@ describe('FolderTrustDialog', () => {
   it('should call onSelect with DO_NOT_TRUST when escape is pressed and not restarting', async () => {
     const onSelect = vi.fn();
     const { stdin } = renderWithProviders(
-      <FolderTrustDialog
-        onSelect={onSelect}
-        isRestarting={false}
-        parentFolder="parent"
-      />,
+      <FolderTrustDialog onSelect={onSelect} isRestarting={false} />,
     );
 
     stdin.write('\x1b'); // escape key
@@ -54,11 +50,7 @@ describe('FolderTrustDialog', () => {
   it('should not call onSelect when escape is pressed and is restarting', async () => {
     const onSelect = vi.fn();
     const { stdin } = renderWithProviders(
-      <FolderTrustDialog
-        onSelect={onSelect}
-        isRestarting={true}
-        parentFolder="parent"
-      />,
+      <FolderTrustDialog onSelect={onSelect} isRestarting={true} />,
     );
 
     stdin.write('\x1b'); // escape key
@@ -70,11 +62,7 @@ describe('FolderTrustDialog', () => {
 
   it('should display restart message when isRestarting is true', () => {
     const { lastFrame } = renderWithProviders(
-      <FolderTrustDialog
-        onSelect={vi.fn()}
-        isRestarting={true}
-        parentFolder="parent"
-      />,
+      <FolderTrustDialog onSelect={vi.fn()} isRestarting={true} />,
     );
 
     expect(lastFrame()).toContain(
@@ -84,11 +72,7 @@ describe('FolderTrustDialog', () => {
 
   it('should call process.exit when "r" is pressed and isRestarting is true', async () => {
     const { stdin } = renderWithProviders(
-      <FolderTrustDialog
-        onSelect={vi.fn()}
-        isRestarting={true}
-        parentFolder="parent"
-      />,
+      <FolderTrustDialog onSelect={vi.fn()} isRestarting={true} />,
     );
 
     stdin.write('r');
@@ -100,11 +84,7 @@ describe('FolderTrustDialog', () => {
 
   it('should not call process.exit when "r" is pressed and isRestarting is false', async () => {
     const { stdin } = renderWithProviders(
-      <FolderTrustDialog
-        onSelect={vi.fn()}
-        isRestarting={false}
-        parentFolder="parent"
-      />,
+      <FolderTrustDialog onSelect={vi.fn()} isRestarting={false} />,
     );
 
     stdin.write('r');
@@ -112,13 +92,5 @@ describe('FolderTrustDialog', () => {
     await waitFor(() => {
       expect(process.exit).not.toHaveBeenCalled();
     });
-  });
-
-  it('should display the parent folder name in the options', () => {
-    const { lastFrame } = renderWithProviders(
-      <FolderTrustDialog onSelect={vi.fn()} parentFolder="my-parent-folder" />,
-    );
-
-    expect(lastFrame()).toContain('Trust parent folder (my-parent-folder)');
   });
 });

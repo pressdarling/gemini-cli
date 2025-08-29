@@ -1282,41 +1282,12 @@ describe('App UI', () => {
       await Promise.resolve();
       expect(lastFrame()).not.toContain('Do you trust this folder?');
     });
-
-    it('should pass parentFolder to FolderTrustDialog', async () => {
-      const { useFolderTrust } = await import('./hooks/useFolderTrust.js');
-      vi.mocked(useFolderTrust).mockReturnValue({
-        isFolderTrustDialogOpen: true,
-        handleFolderTrustSelect: vi.fn(),
-        isRestarting: false,
-        parentFolder: 'my-test-parent-folder',
-      });
-
-      const { lastFrame, unmount } = renderWithProviders(
-        <App
-          config={mockConfig as unknown as ServerConfig}
-          settings={mockSettings}
-          version={mockVersion}
-        />,
-      );
-      currentUnmount = unmount;
-      await Promise.resolve();
-      expect(lastFrame()).toContain(
-        'Trust parent folder (my-test-parent-folder)',
-      );
-    });
   });
 
   describe('Message Queuing', () => {
     let mockSubmitQuery: typeof vi.fn;
 
-    beforeEach(async () => {
-      const { useFolderTrust } = await import('./hooks/useFolderTrust.js');
-      vi.mocked(useFolderTrust).mockReturnValue({
-        isFolderTrustDialogOpen: false,
-        handleFolderTrustSelect: vi.fn(),
-        isRestarting: false,
-      });
+    beforeEach(() => {
       mockSubmitQuery = vi.fn();
       vi.useFakeTimers();
     });

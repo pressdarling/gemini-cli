@@ -13,7 +13,6 @@ import {
   isWorkspaceTrusted,
 } from '../../config/trustedFolders.js';
 import * as process from 'node:process';
-import * as path from 'node:path';
 
 export const useFolderTrust = (
   settings: LoadedSettings,
@@ -22,7 +21,6 @@ export const useFolderTrust = (
   const [isTrusted, setIsTrusted] = useState<boolean | undefined>(undefined);
   const [isFolderTrustDialogOpen, setIsFolderTrustDialogOpen] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
-  const [parentFolder, setParentFolder] = useState<string>('');
 
   const folderTrust = settings.merged.security?.folderTrust?.enabled;
   const folderTrustFeature =
@@ -36,9 +34,6 @@ export const useFolderTrust = (
     setIsTrusted(trusted);
     setIsFolderTrustDialogOpen(trusted === undefined);
     onTrustChange(trusted);
-    if (trusted === undefined) {
-      setParentFolder(path.basename(path.dirname(process.cwd())));
-    }
   }, [onTrustChange, folderTrust, folderTrustFeature]);
 
   const handleFolderTrustSelect = useCallback(
@@ -86,6 +81,5 @@ export const useFolderTrust = (
     isFolderTrustDialogOpen,
     handleFolderTrustSelect,
     isRestarting,
-    parentFolder,
   };
 };

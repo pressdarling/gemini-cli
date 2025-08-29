@@ -291,12 +291,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } =
     useSettingsCommand();
 
-  const {
-    isFolderTrustDialogOpen,
-    handleFolderTrustSelect,
-    isRestarting,
-    parentFolder,
-  } = useFolderTrust(settings, setIsTrustedFolder);
+  const { isFolderTrustDialogOpen, handleFolderTrustSelect, isRestarting } =
+    useFolderTrust(settings, setIsTrustedFolder);
 
   const {
     isAuthDialogOpen,
@@ -1052,7 +1048,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             <FolderTrustDialog
               onSelect={handleFolderTrustSelect}
               isRestarting={isRestarting}
-              parentFolder={parentFolder}
             />
           ) : shellConfirmationRequest ? (
             <ShellConfirmationDialog request={shellConfirmationRequest} />

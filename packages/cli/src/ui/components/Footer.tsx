@@ -149,10 +149,10 @@ export const Footer: React.FC<FooterProps> = ({
             {showMemoryUsage && <MemoryUsageDisplay />}
           </Box>
         )}
-        <Box alignItems="center">
+        <Box alignItems="center" paddingLeft={2}>
           {corgiMode && (
             <Text>
-              <Text color={theme.ui.symbol}>| </Text>
+              {(!hideCWD || !hideSandboxStatus || !hideModelInfo) && (<Text color={theme.ui.symbol}>| </Text>)}
               <Text color={theme.status.error}>▼</Text>
               <Text color={theme.text.primary}>(´</Text>
               <Text color={theme.status.error}>ᴥ</Text>
@@ -162,7 +162,7 @@ export const Footer: React.FC<FooterProps> = ({
           )}
           {!showErrorDetails && errorCount > 0 && (
             <Box>
-              <Text color={theme.ui.symbol}>| </Text>
+              {(!hideCWD || !hideSandboxStatus || !hideModelInfo) && (<Text color={theme.ui.symbol}>| </Text>)}
               <ConsoleSummaryDisplay errorCount={errorCount} />
             </Box>
           )}

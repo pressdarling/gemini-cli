@@ -637,7 +637,7 @@ export const SETTINGS_SCHEMA = {
             label: 'Folder Trust Feature',
             category: 'Security',
             requiresRestart: true,
-            default: true,
+            default: false,
             description: 'Enable folder trust feature for enhanced security.',
             showInDialog: true,
           },

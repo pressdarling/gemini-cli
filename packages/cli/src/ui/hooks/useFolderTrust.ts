@@ -14,12 +14,8 @@ import {
 } from '../../config/trustedFolders.js';
 import * as process from 'node:process';
 
-import type { Config } from '@google/gemini-cli-core';
-import { useIdeTrustListener } from './useIdeTrustListener.js';
-
 export const useFolderTrust = (
   settings: LoadedSettings,
-  config: Config,
   onTrustChange: (isTrusted: boolean | undefined) => void,
 ) => {
   const [isTrusted, setIsTrusted] = useState<boolean | undefined>(undefined);
@@ -29,7 +25,6 @@ export const useFolderTrust = (
   const folderTrust = settings.merged.security?.folderTrust?.enabled;
   const folderTrustFeature =
     settings.merged.security?.folderTrust?.featureEnabled;
-
 
   const updateTrust = useCallback(
     (newIsTrusted: boolean) => {
@@ -47,8 +42,6 @@ export const useFolderTrust = (
     },
     [isTrusted, onTrustChange],
   );
-
-  useIdeTrustListener(config, updateTrust);
 
   useEffect(() => {
     const trusted = isWorkspaceTrusted({

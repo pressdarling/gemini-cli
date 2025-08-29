@@ -10,7 +10,7 @@ import { homedir } from 'node:os';
 import {
   getErrorMessage,
   isWithinRoot,
-  getIdeWorkspaceTrustOverride,
+  getIdeTrust,
 } from '@google/gemini-cli-core';
 import type { Settings } from './settings.js';
 import stripJsonComments from 'strip-json-comments';
@@ -218,10 +218,11 @@ export function isWorkspaceTrusted(settings: Settings): boolean | undefined {
     return true;
   }
 
-  const trustOverride = getIdeWorkspaceTrustOverride();
-  if (trustOverride !== undefined) {
-    console.error('Overriding trust status using ide trust');
-    return trustOverride;
+  const ideTrust = getIdeTrust();
+  if (ideTrust !== undefined) {
+    return ideTrust;
   }
+
+  // Fall back to the local user configuration
   return getWorkspaceTrustFromLocalConfig();
 }

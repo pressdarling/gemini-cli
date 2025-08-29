@@ -1402,9 +1402,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               nightly={nightly}
               vimMode={vimModeEnabled ? vimMode : undefined}
               isTrustedFolder={isTrustedFolderState}
-              hideCWD={settings.merged.ui?.footer?.hideCWD}
-              hideSandboxStatus={settings.merged.ui?.footer?.hideSandboxStatus}
-              hideModelInfo={settings.merged.ui?.footer?.hideModelInfo}
+              hideCWD={settings.merged.ui?.hideCWD}
+              hideSandboxStatus={settings.merged.ui?.hideSandboxStatus}
+              hideModelInfo={settings.merged.ui?.hideModelInfo}
             />
           )}
         </Box>

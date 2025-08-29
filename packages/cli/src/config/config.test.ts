@@ -1526,12 +1526,12 @@ describe('loadCliConfig folderTrust', () => {
     expect(config.getFolderTrust()).toBe(true);
   });
 
-  it('should be true by default', async () => {
+  it('should be false by default', async () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments({} as Settings);
     const settings: Settings = {};
     const config = await loadCliConfig(settings, [], 'test-session', argv);
-    expect(config.getFolderTrust()).toBe(true);
+    expect(config.getFolderTrust()).toBe(false);
   });
 });
 

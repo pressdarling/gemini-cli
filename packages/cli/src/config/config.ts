@@ -381,7 +381,7 @@ export async function loadCliConfig(
 
   const ideMode = settings.ide?.enabled ?? false;
 
-  const folderTrustSetting = settings.security?.folderTrust?.enabled ?? true;
+  const folderTrustSetting = settings.security?.folderTrust?.enabled ?? false;
   const folderTrust = folderTrustSetting;
   const trustedFolder = isWorkspaceTrusted(settings);
 

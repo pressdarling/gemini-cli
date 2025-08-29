@@ -202,7 +202,7 @@ export interface ConfigParameters {
   loadMemoryFromIncludeDirectories?: boolean;
   chatCompression?: ChatCompressionSettings;
   interactive?: boolean;
-  trustedFolder?: boolean;
+  folderTrustStateFromFile?: boolean;
   useRipgrep?: boolean;
   shouldUseNodePtyShell?: boolean;
   skipNextSpeakerCheck?: boolean;
@@ -275,7 +275,7 @@ export class Config {
   private readonly loadMemoryFromIncludeDirectories: boolean = false;
   private readonly chatCompression: ChatCompressionSettings | undefined;
   private readonly interactive: boolean;
-  private readonly trustedFolder: boolean | undefined;
+  private readonly folderTrustStateFromFile: boolean | undefined;
   private readonly useRipgrep: boolean;
   private readonly shouldUseNodePtyShell: boolean;
   private readonly skipNextSpeakerCheck: boolean;
@@ -351,7 +351,7 @@ export class Config {
       params.loadMemoryFromIncludeDirectories ?? false;
     this.chatCompression = params.chatCompression;
     this.interactive = params.interactive ?? false;
-    this.trustedFolder = params.trustedFolder;
+    this.folderTrustStateFromFile = params.folderTrustStateFromFile;
     this.useRipgrep = params.useRipgrep ?? false;
     this.shouldUseNodePtyShell = params.shouldUseNodePtyShell ?? false;
     this.skipNextSpeakerCheck = params.skipNextSpeakerCheck ?? false;
@@ -572,7 +572,7 @@ export class Config {
   }
 
   setApprovalMode(mode: ApprovalMode): void {
-    if (this.isTrustedFolder() === false && mode !== ApprovalMode.DEFAULT) {
+    if (!this.isTrustedFolder() && mode !== ApprovalMode.DEFAULT) {
       throw new Error(
         'Cannot enable privileged approval modes in an untrusted folder.',
       );
@@ -730,8 +730,20 @@ export class Config {
     return this.folderTrust;
   }
 
-  isTrustedFolder(): boolean | undefined {
-    return this.trustedFolder;
+  isTrustedFolder(): boolean {
+    if (!this.getFolderTrust()) return true;
+
+    // isWorkspaceTrusted in cli/src/config/trustedFolder.js returns undefined
+    // when the file based trust value is unavailable, since it is mainly used
+    // in the initialization for trust dialogs, etc. Here we return true since
+    // config.isTrustedFolder() is used for the main business logic of blocking
+    // tool calls etc in the rest of the application.
+    //
+    // Default value is true since we load with trusted settings to avoid
+    // restarts in the more common path. If the user chooses to mark the folder
+    // as untrusted, the CLI will restart and we will have the trust value
+    // reloaded.
+    return this.folderTrustStateFromFile ?? true;
   }
 
   setIdeMode(value: boolean): void {

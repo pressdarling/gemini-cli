@@ -17,7 +17,7 @@ interface InstallArgs {
   path?: string;
 }
 
-const ORG_REPO_REGEX = /^[\w-]+\/[\w-]+$/;
+const ORG_REPO_REGEX = /^[a-zA-Z0-9-]+\/[\w.-]+$/;
 
 export async function handleInstall(args: InstallArgs) {
   try {

@@ -14,7 +14,7 @@
     "url": "git+https://github.com/google-gemini/gemini-cli.git"
   },
   "config": {
-    "sandboxImageUri": "ghcr.io/google-gemini/gemini-cli/sandbox:0.7.0-nightly.20250918.2722473a"
+    "sandboxImageUri": "us-docker.pkg.dev/gemini-code-dev/gemini-cli/sandbox:0.7.0-nightly.20250918.2722473a"
   },
   "scripts": {
     "start": "cross-env node scripts/start.js",

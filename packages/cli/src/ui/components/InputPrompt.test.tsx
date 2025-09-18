@@ -1966,6 +1966,29 @@ describe('InputPrompt', () => {
       expect(stdout.lastFrame()).toMatchSnapshot();
       unmount();
     });
+
+    it('should not show inverted cursor when shell is focused', async () => {
+      props.isEmbeddedShellFocused = true;
+      props.focus = false;
+      const { stdout, unmount } = renderWithProviders(
+        <InputPrompt {...props} />,
+      );
+      await wait();
+      expect(stdout.lastFrame()).toMatchSnapshot();
+      unmount();
+    });
+  });
+
+  it('should still allow input when not focused', async () => {
+    props.focus = false;
+    const { stdin, unmount } = renderWithProviders(<InputPrompt {...props} />);
+    await wait();
+
+    stdin.write('a');
+    await wait();
+
+    expect(mockBuffer.handleInput).toHaveBeenCalled();
+    unmount();
   });
 });
 function clean(str: string | undefined): string {

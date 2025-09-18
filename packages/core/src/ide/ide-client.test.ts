@@ -51,7 +51,11 @@ describe('IdeClient', () => {
 
   beforeEach(async () => {
     // Reset singleton instance for test isolation
-    (IdeClient as any).instancePromise = null;
+    (
+      IdeClient as unknown as {
+        instancePromise: Promise<IdeClient> | null;
+      }
+    ).instancePromise = null;
 
     // Mock environment variables
     process.env['GEMINI_CLI_IDE_WORKSPACE_PATH'] = '/test/workspace';
@@ -351,8 +355,12 @@ describe('IdeClient', () => {
 
       const validateSpy = vi
         .spyOn(IdeClient, 'validateWorkspacePath')
-        .mockReturnValueOnce({ isValid: false })
-        .mockReturnValueOnce({ isValid: true });
+        .mockImplementation((workspacePath) => {
+          if (workspacePath === '/invalid/workspace') {
+            return { isValid: false };
+          }
+          return { isValid: true };
+        });
 
       const ideClient = await IdeClient.getInstance();
       const result = await (
@@ -364,12 +372,10 @@ describe('IdeClient', () => {
       expect(result).toEqual(validConfig);
       expect(validateSpy).toHaveBeenCalledWith(
         '/invalid/workspace',
-        'VS Code',
         '/test/workspace/sub-dir',
       );
       expect(validateSpy).toHaveBeenCalledWith(
         '/test/workspace',
-        'VS Code',
         '/test/workspace/sub-dir',
       );
     });

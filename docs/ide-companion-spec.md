@@ -40,23 +40,12 @@ For Gemini CLI to connect, it needs to discover which IDE instance it's running 
   ```
   - `port` (number, required): The port of the MCP server.
   - `workspacePath` (string, required): A list of all open workspace root paths, delimited by the OS-specific path separator (`:` for Linux/macOS, `;` for Windows). The CLI uses this path to ensure it's running in the same project folder that's open in the IDE. If the CLI's current working directory is not a sub-directory of `workspacePath`, the connection will be rejected. Your extension **MUST** provide the correct, absolute path(s) to the root of the open workspace(s).
-  - `authToken` (string, required): A secret token for securing the connection. If provided, the CLI will include this token in an `Authorization: Bearer <token>` header on all requests.
+  - `authToken` (string, required): A secret token for securing the connection. The CLI will include this token in an `Authorization: Bearer <token>` header on all requests.
   - `ideInfo` (object, required): Information about the IDE.
     - `name` (string, required): A short, lowercase identifier for the IDE (e.g., `vscode`, `jetbrains`).
     - `displayName` (string, required): A user-friendly name for the IDE (e.g., `VS Code`, `JetBrains IDE`).
-- **Tie-Breaking with Environment Variables (Recommended):** For the most reliable experience, your extension **SHOULD** both create the discovery file and set the `GEMINI_CLI_IDE_SERVER_PORT` and `GEMINI_CLI_IDE_WORKSPACE_PATH` environment variables in the integrated terminal. The file serves as the primary discovery mechanism, but the environment variables are crucial for tie-breaking. If a user has multiple IDE windows open for the same workspace, the CLI uses the `GEMINI_CLI_IDE_SERVER_PORT` variable to identify and connect to the correct window's server.
-  - For prototyping, you may opt to _only_ set the environment variables. However, this is not a robust solution for a production extension, as environment variables may not be reliably set in all terminal sessions (e.g., restored terminals), which can lead to connection failures.
-- **Authentication:** To secure the connection, the extension **SHOULD** generate a unique, secret token and include it in the discovery file. The CLI will then include this token in all requests to the MCP server.
-  - **Token Generation:** The extension should generate a random string to be used as a bearer token.
-  - **Discovery File Content:** The `authToken` field must be added to the JSON object in the discovery file:
-    ```json
-    {
-      "port": 12345,
-      "workspacePath": "/path/to/project",
-      "authToken": "a-very-secret-token"
-    }
-    ```
-  - **Request Authorization:** The CLI will read the `authToken` from the file and include it in the `Authorization` header for all HTTP requests to the MCP server (e.g., `Authorization: Bearer a-very-secret-token`). Your server **MUST** validate this token on every request and reject any that are unauthorized.
+- **Tie-Breaking with Environment Variables (Recommended):** For the most reliable experience, your extension **SHOULD** both create the discovery file and set the `GEMINI_CLI_IDE_SERVER_PORT` environment variables in the integrated terminal. The file serves as the primary discovery mechanism, but the environment variable is crucial for tie-breaking. If a user has multiple IDE windows open for the same workspace, the CLI uses the `GEMINI_CLI_IDE_SERVER_PORT` variable to identify and connect to the correct window's server.
+- **Authentication:** To secure the connection, the extension **MUST** generate a unique, secret token and include it in the discovery file. The CLI will then include it in the `Authorization` header for all HTTP requests to the MCP server (e.g., `Authorization: Bearer a-very-secret-token`). Your server **MUST** validate this token on every request and reject any that are unauthorized.
 
 ## II. The Context Interface
 

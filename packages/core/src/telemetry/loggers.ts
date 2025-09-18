@@ -32,13 +32,11 @@ import {
   EVENT_RIPGREP_FALLBACK,
   EVENT_MODEL_ROUTING,
   EVENT_EXTENSION_INSTALL,
-  EVENT_EXTENSIONS_ENABLE,
 } from './constants.js';
 import type {
   ApiErrorEvent,
   ApiRequestEvent,
   ApiResponseEvent,
-  ExtensionEnableEvent,
   FileOperationEvent,
   IdeConnectionEvent,
   StartSessionEvent,

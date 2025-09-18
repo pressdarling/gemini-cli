@@ -14,12 +14,11 @@ interface EnableArgs {
   scope?: SettingScope;
 }
 
-export function handleEnable(args: EnableArgs) {
+export async function handleEnable(args: EnableArgs) {
   try {
-    const scopes = args.scope
-      ? [args.scope]
-      : [SettingScope.User, SettingScope.Workspace];
-    await enableExtension(args.name, scopes);
+    const scope = args.scope ? args.scope : SettingScope.User;
+    enableExtension(args.name, scope);
+    await enableExtension(args.name, scope);
     if (args.scope) {
       console.log(
         `Extension "${args.name}" successfully enabled for scope "${args.scope}".`,

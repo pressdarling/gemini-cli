@@ -729,7 +729,7 @@ export function disableExtension(
   manager.disable(name, true, scopePath);
 }
 
-export function enableExtension(
+export async function enableExtension(
   name: string,
   scope: SettingScope,
   cwd: string = process.cwd(),
@@ -742,6 +742,8 @@ export function enableExtension(
   );
   const scopePath = scope === SettingScope.Workspace ? cwd : os.homedir();
   manager.enable(name, true, scopePath);
+  const config = await getClearcutConfig(cwd);
+  logExtensionEnable(config, new ExtensionEnableEvent(name, scope));
 }
 
 export async function updateAllUpdatableExtensions(

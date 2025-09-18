@@ -27,10 +27,7 @@ import type {
   IndividualToolCallDisplay,
 } from '../types.js';
 import { ToolCallStatus } from '../types.js';
-import {
-  escapeAnsiCtrl,
-  escapeAnsiCtrlConfirmationDetails,
-} from '../utils/textUtils.js';
+import { escapeAnsiCtrlCodes } from '../utils/textUtils.js';
 
 export type ScheduleFn = (
   request: ToolCallRequestInfo | ToolCallRequestInfo[],
@@ -234,26 +231,6 @@ export function mapToDisplay(
         renderOutputAsMarkdown = trackedCall.tool.isOutputMarkdown;
       }
 
-      // Escape ANSI in IndividualToolCallDisplay
-      displayName = displayName ? escapeAnsiCtrl(displayName) : displayName;
-      description = description ? escapeAnsiCtrl(description) : description;
-      if (
-        'response' in trackedCall &&
-        typeof trackedCall.response.resultDisplay === 'string'
-      ) {
-        trackedCall.response.resultDisplay = escapeAnsiCtrl(
-          trackedCall.response.resultDisplay,
-        );
-      }
-      if (
-        'confirmationDetails' in trackedCall &&
-        trackedCall.confirmationDetails
-      ) {
-        trackedCall.confirmationDetails = escapeAnsiCtrlConfirmationDetails(
-          trackedCall.confirmationDetails,
-        );
-      }
-
       const baseDisplayProperties: Omit<
         IndividualToolCallDisplay,
         'status' | 'resultDisplay' | 'confirmationDetails'
@@ -329,6 +306,6 @@ export function mapToDisplay(
 
   return {
     type: 'tool_group',
-    tools: toolDisplays,
+    tools: escapeAnsiCtrlCodes(toolDisplays),
   };
 }

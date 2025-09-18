@@ -9,8 +9,6 @@ import ansiRegex from 'ansi-regex';
 import { stripVTControlCharacters } from 'node:util';
 import stringWidth from 'string-width';
 
-import type { ToolCallConfirmationDetails } from '@google/gemini-cli-core';
-
 /**
  * Calculates the maximum width of a multi-line ASCII art string.
  * @param asciiArt The ASCII art string.
@@ -153,57 +151,74 @@ export const clearStringWidthCache = (): void => {
 const regex = ansiRegex();
 
 /**
- * Replaces ANSI escape codes in a string with a visible, non-functional
- * representation.
- * @param s The string to sanitize.
- * @returns The sanitized string.
+ * Traverses a JSON object and escapes all ANSI control characters in its string
+ * fields.
+ *
+ * This function is designed to be more robust and future-proof than manually
+ * escaping specific fields. It recursively traverses the JSON object and applies
+ * the `escapeAnsiCtrl` function to all string values.
+ *
+ * To optimize performance, the function avoids creating a new object if no
+ * string fields need to be escaped. It returns the original object in such
+ * cases.
+ *
+ * @param obj The JSON object to traverse and escape.
+ * @returns A new JSON object with all string fields escaped, or the original
+ *   object if no fields required escaping.
  */
-export function escapeAnsiCtrl(s: string): string {
-  return s.replace(regex, (match) => JSON.stringify(match).slice(1, -1));
-}
-
-/**
- * Escapes all ANSI control chars within a ToolCallConfirmationDetails object.
- * @param details The details object.
- * @returns The sanitized details object.
- */
-export function escapeAnsiCtrlConfirmationDetails(
-  details: ToolCallConfirmationDetails,
-): ToolCallConfirmationDetails {
-  switch (details.type) {
-    case 'edit': {
-      const newDetails = { ...details };
-      newDetails.title = escapeAnsiCtrl(newDetails.title);
-      newDetails.fileName = escapeAnsiCtrl(newDetails.fileName);
-      newDetails.filePath = escapeAnsiCtrl(newDetails.filePath);
-      newDetails.fileDiff = escapeAnsiCtrl(newDetails.fileDiff);
-      return newDetails;
-    }
-    case 'mcp': {
-      const newDetails = { ...details };
-      newDetails.title = escapeAnsiCtrl(newDetails.title);
-      newDetails.serverName = escapeAnsiCtrl(newDetails.serverName);
-      newDetails.toolName = escapeAnsiCtrl(newDetails.toolName);
-      newDetails.toolDisplayName = escapeAnsiCtrl(newDetails.toolDisplayName);
-      return newDetails;
-    }
-    case 'exec': {
-      const newDetails = { ...details };
-      newDetails.title = escapeAnsiCtrl(newDetails.title);
-      newDetails.command = escapeAnsiCtrl(newDetails.command);
-      newDetails.rootCommand = escapeAnsiCtrl(newDetails.rootCommand);
-      return newDetails;
-    }
-    case 'info': {
-      const newDetails = { ...details };
-      newDetails.title = escapeAnsiCtrl(newDetails.title);
-      newDetails.prompt = escapeAnsiCtrl(newDetails.prompt);
-      if (newDetails.urls) {
-        newDetails.urls = newDetails.urls.map((url) => escapeAnsiCtrl(url));
-      }
-      return newDetails;
-    }
-    default:
-      return details;
+export function escapeAnsiCtrlCodes<T>(obj: T): T {
+  if (typeof obj === 'string') {
+    return obj.replace(regex, (match) =>
+      JSON.stringify(match).slice(1, -1),
+    ) as T;
   }
+
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+
+  let madeChanges = false;
+
+  if (Array.isArray(obj)) {
+    const newArr = [...obj];
+    for (let i = 0; i < newArr.length; i++) {
+      const value = newArr[i];
+      if (typeof value === 'string') {
+        const escapedValue = escapeAnsiCtrlCodes(value);
+        if (escapedValue !== value) {
+          newArr[i] = escapedValue;
+          madeChanges = true;
+        }
+      } else {
+        const escapedValue = escapeAnsiCtrlCodes(value);
+        if (escapedValue !== value) {
+          newArr[i] = escapedValue;
+          madeChanges = true;
+        }
+      }
+    }
+    return madeChanges ? (newArr as T) : obj;
+  }
+
+  const newObj = { ...obj };
+  for (const key in newObj) {
+    if (Object.prototype.hasOwnProperty.call(newObj, key)) {
+      const value = newObj[key];
+      if (typeof value === 'string') {
+        const escapedValue = escapeAnsiCtrlCodes(value as string);
+        if (escapedValue !== value) {
+          (newObj as Record<string, unknown>)[key] = escapedValue;
+          madeChanges = true;
+        }
+      } else {
+        const escapedValue = escapeAnsiCtrlCodes(value);
+        if (escapedValue !== value) {
+          (newObj as Record<string, unknown>)[key] = escapedValue;
+          madeChanges = true;
+        }
+      }
+    }
+  }
+
+  return madeChanges ? newObj : obj;
 }

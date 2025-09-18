@@ -526,6 +526,35 @@ export class ContentRetryFailureEvent implements BaseTelemetryEvent {
   }
 }
 
+export class ModelRoutingEvent implements BaseTelemetryEvent {
+  'event.name': 'model_routing';
+  'event.timestamp': string;
+  decision_model: string;
+  decision_source: string;
+  routing_latency_ms: number;
+  reasoning?: string;
+  failed: boolean;
+  error_message?: string;
+
+  constructor(
+    decision_model: string,
+    decision_source: string,
+    routing_latency_ms: number,
+    reasoning: string | undefined,
+    failed: boolean,
+    error_message: string | undefined,
+  ) {
+    this['event.name'] = 'model_routing';
+    this['event.timestamp'] = new Date().toISOString();
+    this.decision_model = decision_model;
+    this.decision_source = decision_source;
+    this.routing_latency_ms = routing_latency_ms;
+    this.reasoning = reasoning;
+    this.failed = failed;
+    this.error_message = error_message;
+  }
+}
+
 export type TelemetryEvent =
   | StartSessionEvent
   | EndSessionEvent
@@ -547,9 +576,9 @@ export type TelemetryEvent =
   | InvalidChunkEvent
   | ContentRetryEvent
   | ContentRetryFailureEvent
-  | ExtensionEnableEvent
   | ExtensionInstallEvent
   | ExtensionUninstallEvent
+  | ModelRoutingEvent
   | ToolOutputTruncatedEvent;
 
 export class ExtensionInstallEvent implements BaseTelemetryEvent {
@@ -624,12 +653,12 @@ export class ExtensionEnableEvent implements BaseTelemetryEvent {
   'event.name': 'extension_enable';
   'event.timestamp': string;
   extension_name: string;
-  settingScope: string;
+  setting_scope: string;
 
   constructor(extension_name: string, settingScope: string) {
     this['event.name'] = 'extension_enable';
     this['event.timestamp'] = new Date().toISOString();
     this.extension_name = extension_name;
-    this.settingScope = settingScope;
+    this.setting_scope = settingScope;
   }
 }

@@ -14,7 +14,7 @@ interface EnableArgs {
   scope?: SettingScope;
 }
 
-export async function handleEnable(args: EnableArgs) {
+export function handleEnable(args: EnableArgs) {
   try {
     const scopes = args.scope
       ? [args.scope]
@@ -50,8 +50,8 @@ export const enableCommand: CommandModule = {
         choices: [SettingScope.User, SettingScope.Workspace],
       })
       .check((_argv) => true),
-  handler: async (argv) => {
-    await handleEnable({
+  handler: (argv) => {
+    handleEnable({
       name: argv['name'] as string,
       scope: argv['scope'] as SettingScope,
     });

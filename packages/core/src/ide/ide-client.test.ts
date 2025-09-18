@@ -51,11 +51,8 @@ describe('IdeClient', () => {
 
   beforeEach(async () => {
     // Reset singleton instance for test isolation
-    (
-      IdeClient as unknown as {
-        instancePromise: Promise<IdeClient> | null;
-      }
-    ).instancePromise = null;
+    (IdeClient as unknown as { instance: IdeClient | undefined }).instance =
+      undefined;
 
     // Mock environment variables
     process.env['GEMINI_CLI_IDE_WORKSPACE_PATH'] = '/test/workspace';
@@ -353,14 +350,10 @@ describe('IdeClient', () => {
         .mockResolvedValueOnce(JSON.stringify(invalidConfig))
         .mockResolvedValueOnce(JSON.stringify(validConfig));
 
-      const validateSpy = vi
+    const validateSpy = vi
         .spyOn(IdeClient, 'validateWorkspacePath')
-        .mockImplementation((workspacePath) => {
-          if (workspacePath === '/invalid/workspace') {
-            return { isValid: false };
-          }
-          return { isValid: true };
-        });
+        .mockReturnValueOnce({ isValid: false })
+        .mockReturnValueOnce({ isValid: true });
 
       const ideClient = await IdeClient.getInstance();
       const result = await (

@@ -57,7 +57,9 @@ runs:
         GEMINI_SANDBOX_IMAGE_TAG: '${{ steps.image_tag.outputs.FINAL_TAG }}'
         GEMINI_SANDBOX: 'docker'
       run: |-
-        npm run build:sandbox -- --output-file final_image_uri.txt
+        npm run build:sandbox -- \
+          --image ghcr.io/${{ github.repository}}/sandbox:${{ steps.image_tag.outputs.FINAL_TAG }} \
+          --output-file final_image_uri.txt
         echo "uri=$(cat final_image_uri.txt)" >> $GITHUB_OUTPUT
     - name: 'publish'
       shell: 'bash'

@@ -44,8 +44,8 @@ For Gemini CLI to connect, it needs to discover which IDE instance it's running 
   - `ideInfo` (object, required): Information about the IDE.
     - `name` (string, required): A short, lowercase identifier for the IDE (e.g., `vscode`, `jetbrains`).
     - `displayName` (string, required): A user-friendly name for the IDE (e.g., `VS Code`, `JetBrains IDE`).
-- **Tie-Breaking with Environment Variables (Recommended):** For the most reliable experience, your extension **SHOULD** both create the discovery file and set the `GEMINI_CLI_IDE_SERVER_PORT` environment variable in the integrated terminal. The file serves as the primary discovery mechanism, but the environment variable is crucial for tie-breaking. If a user has multiple IDE windows open for the same workspace, the CLI uses the `GEMINI_CLI_IDE_SERVER_PORT` variable to identify and connect to the correct window's server.
 - **Authentication:** To secure the connection, the extension **MUST** generate a unique, secret token and include it in the discovery file. The CLI will then include this token in the `Authorization` header for all requests to the MCP server (e.g., `Authorization: Bearer a-very-secret-token`). Your server **MUST** validate this token on every request and reject any that are unauthorized.
+- **Tie-Breaking with Environment Variables (Recommended):** For the most reliable experience, your extension **SHOULD** both create the discovery file and set the `GEMINI_CLI_IDE_SERVER_PORT` environment variable in the integrated terminal. The file serves as the primary discovery mechanism, but the environment variable is crucial for tie-breaking. If a user has multiple IDE windows open for the same workspace, the CLI uses the `GEMINI_CLI_IDE_SERVER_PORT` variable to identify and connect to the correct window's server.
 
 ## II. The Context Interface
 

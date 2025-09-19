@@ -307,15 +307,6 @@ export const useGeminiStream = (
 
       if (typeof query === 'string') {
         const trimmedQuery = query.trim();
-        logUserPrompt(
-          config,
-          new UserPromptEvent(
-            trimmedQuery.length,
-            prompt_id,
-            config.getContentGeneratorConfig()?.authType,
-            trimmedQuery,
-          ),
-        );
         onDebugMessage(`User query: '${trimmedQuery}'`);
         await logger?.logMessage(MessageSenderType.USER, trimmedQuery);
 
@@ -777,6 +768,19 @@ export const useGeminiStream = (
         }
 
         if (!options?.isContinuation) {
+          const promptText =
+            typeof queryToSend === 'string'
+              ? queryToSend
+              : JSON.stringify(queryToSend);
+          logUserPrompt(
+            config,
+            new UserPromptEvent(
+              promptText.length,
+              prompt_id,
+              config.getContentGeneratorConfig()?.authType,
+              promptText,
+            ),
+          );
           startNewPrompt();
           setThought(null); // Reset thought when starting a new prompt
         }

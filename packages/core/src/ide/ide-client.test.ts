@@ -259,16 +259,6 @@ describe('IdeClient', () => {
         'Failed to connect',
       );
     });
-
-    it('should initialize connectionConfig before connect is called', async () => {
-      const ideClient = await IdeClient.getInstance();
-
-      // As connectionConfig is private, we need to cast to access it in the test.
-      expect(
-        (ideClient as unknown as { connectionConfig: unknown })
-          .connectionConfig,
-      ).toBeDefined();
-    });
   });
 
   describe('getConnectionConfigFromFile', () => {

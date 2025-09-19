@@ -25,7 +25,7 @@ export class Override {
   static fromInput(inputRule: string, includeSubdirs: boolean): Override {
     const isDisable = inputRule.startsWith('!');
     let baseRule = isDisable ? inputRule.substring(1) : inputRule;
-    baseRule = `${baseRule.replace(/[\\/]$/, '')}${path.sep}`;
+    baseRule = ensureLeadingAndTrailingSlash(baseRule);
     return new Override(baseRule, isDisable, includeSubdirs);
   }
 
@@ -76,13 +76,14 @@ export class Override {
     return this.asRegex().test(path);
   }
 }
-const ensureLeadingAndTrailingSlash = function (path: string): string {
-  let result = path;
-  if (path.charAt(0) !== '/') {
-    result = '/' + result;
+
+const ensureLeadingAndTrailingSlash = function (dirPath: string): string {
+  let result = dirPath;
+  if (dirPath.charAt(0) !== path.sep) {
+    result = path.sep + result;
   }
-  if (path.charAt(path.length - 1) !== '/') {
-    result = result + '/';
+  if (dirPath.charAt(dirPath.length - 1) !== path.sep) {
+    result = result + path.sep;
   }
   return result;
 };

@@ -4,11 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import * as path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
-import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { ExtensionEnablementManager, Override } from './extensionEnablement.js';
+
+vi.mock('node:path', async (importOriginal) => {
+  const originalPath = await importOriginal<typeof path>();
+  return {
+    ...originalPath,
+    sep: '/',
+  };
+});
 
 // Helper to create a temporary directory for testing
 function createTestDir() {

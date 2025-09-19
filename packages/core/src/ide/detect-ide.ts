@@ -16,8 +16,6 @@ export const IDE_DEFINITIONS = {
   vscodefork: { name: 'vscodefork', displayName: 'IDE' },
 } as const;
 
-export type IdeName = keyof typeof IDE_DEFINITIONS;
-
 export interface IdeInfo {
   name: string;
   displayName: string;

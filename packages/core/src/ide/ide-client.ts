@@ -148,6 +148,7 @@ export class IdeClient {
 
     this.setState(IDEConnectionStatus.Connecting);
 
+    this.connectionConfig = await this.getConnectionConfigFromFile();
     if (this.connectionConfig?.authToken) {
       this.authToken = this.connectionConfig.authToken;
     }

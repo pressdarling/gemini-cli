@@ -87,6 +87,8 @@ describe('IdeClient', () => {
     vi.mocked(Client).mockReturnValue(mockClient);
     vi.mocked(StreamableHTTPClientTransport).mockReturnValue(mockHttpTransport);
     vi.mocked(StdioClientTransport).mockReturnValue(mockStdioTransport);
+
+    await IdeClient.getInstance();
   });
 
   afterEach(() => {
@@ -257,6 +259,16 @@ describe('IdeClient', () => {
         'Failed to connect',
       );
     });
+
+    it('should initialize connectionConfig before connect is called', async () => {
+      const ideClient = await IdeClient.getInstance();
+
+      // As connectionConfig is private, we need to cast to access it in the test.
+      expect(
+        (ideClient as unknown as { connectionConfig: unknown })
+          .connectionConfig,
+      ).toBeDefined();
+    });
   });
 
   describe('getConnectionConfigFromFile', () => {
@@ -350,7 +362,7 @@ describe('IdeClient', () => {
         .mockResolvedValueOnce(JSON.stringify(invalidConfig))
         .mockResolvedValueOnce(JSON.stringify(validConfig));
 
-    const validateSpy = vi
+      const validateSpy = vi
         .spyOn(IdeClient, 'validateWorkspacePath')
         .mockReturnValueOnce({ isValid: false })
         .mockReturnValueOnce({ isValid: true });

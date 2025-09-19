@@ -58,8 +58,6 @@ describe('ExtensionEnablementManager', () => {
     it('should disable a path based on a disable override rule', () => {
       manager.enable('ext-test', true, '/');
       manager.disable('ext-test', true, '/home/user/projects/');
-      const config = manager.readConfig();
-      console.log(config['ext-test']);
       expect(manager.isEnabled('ext-test', '/home/user/projects/my-app')).toBe(
         false,
       );
@@ -84,7 +82,6 @@ describe('ExtensionEnablementManager', () => {
     it('should handle', () => {
       manager.enable('ext-test', true, '/home/user/projects');
       manager.disable('ext-test', false, '/home/user/projects/my-app');
-      console.log(manager.readConfig()['ext-test'].overrides);
       expect(manager.isEnabled('ext-test', '/home/user/projects/my-app')).toBe(
         false,
       );

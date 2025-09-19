@@ -32,7 +32,7 @@ export class Override {
   static fromFileRule(fileRule: string): Override {
     const isDisable = fileRule.startsWith('!');
     let baseRule = isDisable ? fileRule.substring(1) : fileRule;
-    const includeSubdirs = baseRule.charAt(fileRule.length - 1) === '*';
+    const includeSubdirs = baseRule.endsWith('*');
     baseRule = includeSubdirs
       ? baseRule.substring(0, baseRule.length - 1)
       : baseRule;

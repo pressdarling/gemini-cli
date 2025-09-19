@@ -170,32 +170,7 @@ When the user rejects the changes (e.g., by closing the diff view without accept
   }
   ```
 
-## IV. Supporting Additional IDEs
-
-To add support for a new IDE, two main components in the Gemini CLI codebase need to be updated: the detection logic and the installer logic.
-
-### 1. IDE Detection (`@packages/core/src/ide/detect-ide.ts`)
-
-// TODO(skeshive): Determine whether we should discover the IDE via the port file
-
-The CLI must be able to identify when it is running inside a specific IDE's integrated terminal. This is primarily done by checking for unique environment variables. As a fallback, it can also inspect process information (like the command name) to help distinguish between IDEs if a unique environment variable is not available.
-
-- **Add to `DetectedIde` Enum:** First, add your new IDE to the `DetectedIde` enum.
-- **Update `detectIdeFromEnv`:** Add a check in this function for an environment variable specific to your IDE (e.g., `if (process.env['MY_IDE_VAR']) { return DetectedIde.MyIde; }`).
-- **Update `detectIde` (Optional):** If your IDE lacks a unique environment variable, you can add logic to the `detectIde` function to inspect `ideProcessInfo` (e.g., `ideProcessInfo.command`) as a secondary detection mechanism.
-
-### 2. Extension Installation (`@packages/core/src/ide/ide-installer.ts`)
-
-The CLI provides a command (`/ide install`) to help users automatically install the companion extension. While optional, implementing an `IdeInstaller` for your IDE is highly recommended to provide a seamless setup experience.
-
-- **Create an Installer Class:** Create a new class that implements the `IdeInstaller` interface.
-- **Implement `install()`:** The `install` method should:
-  1.  Locate the IDE's command-line executable. The `VsCodeInstaller` provides a good example of searching common installation paths for different operating systems.
-  2.  Execute the command to install the extension by its marketplace ID (e.g., `"path/to/my-ide-cli" --install-extension my-publisher.my-extension-id`).
-  3.  Return a result object indicating success or failure.
-- **Update `getIdeInstaller`:** Add a case to the `switch` statement in this factory function to return an instance of your new installer class when your `DetectedIde` enum is matched.
-
-## V. The Lifecycle Interface
+## IV. The Lifecycle Interface
 
 The extension **MUST** manage its resources and the discovery file correctly based on the IDE's lifecycle.
 
